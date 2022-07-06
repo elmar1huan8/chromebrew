@@ -3,7 +3,7 @@ require 'package'
 class Buildessential < Package
   description 'A collection of tools essential to compile and build software.'
   homepage ''
-  version '1.18'
+  version '1.19'
   license 'GPL-3+'
   compatibility 'all'
 
@@ -14,13 +14,12 @@ class Buildessential < Package
 
   # install first to get ldconfig
   depends_on 'glibc'
-  # depends_on 'gcc11'
+  depends_on 'gcc'
   depends_on 'gmp'
   depends_on 'mpfr'
   depends_on 'mpc'
   depends_on 'isl'
   depends_on 'libyaml'
-  depends_on 'gcc_tools'
   depends_on 'linuxheaders'
   depends_on 'make'
   depends_on 'pkgconfig'
@@ -111,6 +110,10 @@ class Buildessential < Package
   # Python
   depends_on 'python2'
   depends_on 'python3'
+  depends_on 'py3_build'
+  depends_on 'py3_installer'
+  depends_on 'py3_flit_core'
+  depends_on 'py3_setuptools'
 
   # Qt
   #depends_on 'qtcreator'

@@ -19,7 +19,7 @@ require_relative '../lib/deb_utils'
 $LOAD_PATH.unshift "#{CREW_LIB_PATH}lib"
 
 DOC = <<DOCOPT
-Chromebrew - Package manager for Chrome OS http://skycocker.github.io/chromebrew/
+Chromebrew - Package manager for Chrome OS https://chromebrew.github.io
 
 Usage:
   crew autoremove [options]
@@ -56,11 +56,12 @@ version #{CREW_VERSION}
 DOCOPT
 
 CREW_LICENSE = <<~LICENSESTRING
-  Copyright (C) 2021 Chromebrew Authors
+  Copyright (C) 2013-2022 Chromebrew Authors
 
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
-  the Free Software Foundation, version 3 of the License.
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
 
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -69,6 +70,10 @@ CREW_LICENSE = <<~LICENSESTRING
 
   You should have received a copy of the GNU General Public License
   along with this program. If not, see https://www.gnu.org/licenses/gpl-3.0.html.
+
+  Chromebrew embeds lib/docopt.rb from another project under the MIT License.
+  You should have received a copy of the license along with this program.
+  If not, see https://github.com/docopt/docopt.rb/blob/master/LICENSE
 LICENSESTRING
 
 # All available crew commands.
@@ -683,7 +688,7 @@ def download
   Dir.chdir CREW_BREW_DIR do
     case File.basename(filename)
     # Sources that download with curl
-    when /\.zip$/i, /\.(tar(\.(gz|bz2|xz|lz|zst))?|tgz|tbz|tpxz|txz)$/i, /\.deb$/i, /\.AppImage$/i
+    when /\.zip$/i, /\.(tar(\.(gz|bz2|xz|lzma|lz|zst))?|tgz|tbz|tpxz|txz)$/i, /\.deb$/i, /\.AppImage$/i
       # Recall file from cache if requested
       if CREW_CACHE_ENABLED
         puts "Looking for #{@pkg.name} archive in cache".orange if @opt_verbose
@@ -791,9 +796,14 @@ def download
           system "git fetch --depth 1 origin #{@pkg.git_hashtag}", exception: true
           system 'git checkout FETCH_HEAD'
         end
-        system 'git submodule update --init --recursive'
+        unless @pkg.no_git_submodules?
+          system 'git submodule update --init --recursive'
+        end
         if @pkg.git_fetchtags?
           system 'git fetch --tags', exception: true
+        end
+        if @pkg.git_clone_deep?
+          system "git fetch origin #{@pkg.git_hashtag}", exception: true
         end
         puts 'Repository downloaded.'.lightgreen
       end
@@ -823,7 +833,7 @@ def unpack(meta)
       puts "Unpacking archive using 'unzip', this may take a while..."
       _verbopt = @opt_verbose ? '-v' : '-qq'
       system 'unzip', _verbopt, '-d', @extract_dir, meta[:filename], exception: true
-    when /\.(tar(\.(gz|bz2|xz|lz))?|tgz|tbz|txz)$/i
+    when /\.(tar(\.(gz|bz2|xz|lzma|lz))?|tgz|tbz|txz)$/i
       puts "Unpacking archive using 'tar', this may take a while..."
       system "tar x#{@verbose}f #{meta[:filename]} -C #{@extract_dir}", exception: true
     when /\.tar\.zst$/i
@@ -1059,7 +1069,7 @@ def prepare_package(destdir)
 end
 
 def patchelf_set_need_paths(dir)
-  return if @pkg.no_patchelf?
+  return if @pkg.no_patchelf? or @pkg.no_compile_needed?
 
   Dir.chdir dir do
     puts 'Running patchelf'.lightblue

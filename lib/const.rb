@@ -1,6 +1,6 @@
 # Defines common constants used in different parts of crew
 
-CREW_VERSION = '1.23.15'
+CREW_VERSION = '1.24.0'
 
 ARCH_ACTUAL = `uname -m`.chomp
 # This helps with virtualized builds on aarch64 machines
@@ -81,7 +81,7 @@ else
 end
 
 # If CREW_USE_CURL environment variable exists use curl in lieu of net/http.
-CREW_USE_CURL = ENV['CREW_USE_CURL'] == '1'
+CREW_USE_CURL = ENV['CREW_USE_CURL'].eql?('1')
 
 # Use an external downloader instead of net/http if CREW_DOWNLOADER is set, see lib/downloader.rb for more info
 # About the format of the CREW_DOWNLOADER variable, see line 130-133 in lib/downloader.rb
@@ -89,6 +89,8 @@ CREW_DOWNLOADER = ( ENV['CREW_DOWNLOADER'].to_s.empty? ) ? nil : ENV['CREW_DOWNL
 
 # Downloader maximum retry count
 CREW_DOWNLOADER_RETRY = ( ENV['CREW_DOWNLOADER_RETRY'].to_s.empty? ) ? 3 : ENV['CREW_DOWNLOADER_RETRY'].to_i
+# show download progress bar or not (only applied when using the default ruby downloader)
+CREW_HIDE_PROGBAR = ENV['CREW_HIDE_PROGBAR'].eql?('1')
 
 # set certificate file location for lib/downloader.rb
 SSL_CERT_FILE = if ENV['SSL_CERT_FILE'].to_s.empty? || !File.exist?(ENV['SSL_CERT_FILE'])
@@ -235,6 +237,8 @@ PY3_SETUP_BUILD_OPTIONS = "--executable=#{CREW_PREFIX}/bin/python3"
 PY2_SETUP_BUILD_OPTIONS = "--executable=#{CREW_PREFIX}/bin/python2"
 PY_SETUP_INSTALL_OPTIONS_NO_SVEM = "--root=#{CREW_DEST_DIR} --prefix=#{CREW_PREFIX} -O2 --compile"
 PY_SETUP_INSTALL_OPTIONS = "#{PY_SETUP_INSTALL_OPTIONS_NO_SVEM} --single-version-externally-managed"
+PY3_BUILD_OPTIONS = "--wheel --no-isolation"
+PY3_INSTALLER_OPTIONS = "--destdir=#{CREW_DEST_DIR} --compile-bytecode 2 dist/*.whl"
 
 CREW_ESSENTIAL_FILES = `LD_TRACE_LOADED_OBJECTS=1 #{CREW_PREFIX}/bin/ruby`.scan(/\t([^ ]+)/).flatten +
                        `LD_TRACE_LOADED_OBJECTS=1 #{CREW_PREFIX}/bin/rsync`.scan(/\t([^ ]+)/).flatten +

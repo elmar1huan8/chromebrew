@@ -3,7 +3,7 @@ require 'package'
 class Vivaldi < Package
   description 'Vivaldi is a new browser that blocks unwanted ads, protects you from trackers, and puts you in control with unique built-in features.'
   homepage 'https://vivaldi.com/'
-  version '5.2.2623.41'
+  version '5.3.2679.58-1'
   compatibility 'aarch64,armv7l,x86_64'
   license 'Vivaldi'
 
@@ -20,13 +20,13 @@ class Vivaldi < Package
   case ARCH
   when 'aarch64', 'armv7l'
     arch = 'armhf'
-    source_sha256 '5898086647fd5d26585c3e0416ec7e48b7af61ba045dd4c3297a286678b43bfd'
+    source_sha256 '0c89be36e20212ba0e09d29ff3111806be250e993189b514f3b2962fc309e867'
   when 'x86_64'
     arch = 'amd64'
-    source_sha256 '4d386ca21ea5a79a8980f049419922cf23b0fd06b54a8f97407aaf583dbdd2cf'
+    source_sha256 '5c45e446c9885618cd50d556b609effca8441ffb6a7007b62be64e24732db920'
   end
 
-  source_url "https://downloads.vivaldi.com/stable/vivaldi-stable_#{version}-1_#{arch}.deb"
+  source_url "https://downloads.vivaldi.com/stable/vivaldi-stable_#{version}_#{arch}.deb"
 
   def self.patch
     # ERROR: ld.so: object '/home/chronos/user/.local/lib/vivaldi/media-codecs-89.0.4389.82/libffmpeg.so' from LD_PRELOAD cannot be preloaded

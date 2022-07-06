@@ -4,7 +4,7 @@
 set -e
 
 #chromebrew directories
-: "${OWNER:=skycocker}"
+: "${OWNER:=chromebrew}"
 : "${REPO:=chromebrew}"
 : "${BRANCH:=master}"
 URL="https://raw.githubusercontent.com/${OWNER}/${REPO}/${BRANCH}"
@@ -24,7 +24,7 @@ CREW_PACKAGES_PATH="${CREW_LIB_PATH}/packages"
 ARCH="${ARCH/armv8l/armv7l}"
 
 # BOOTSTRAP_PACKAGES cannot depend on crew_profile_base for their core operations (completion scripts are fine)
-BOOTSTRAP_PACKAGES="musl_zstd pixz ca_certificates git gmp ncurses xxhash lz4 popt libyaml openssl zstd rsync ruby"
+BOOTSTRAP_PACKAGES="musl_zstd pixz ca_certificates git gmp ncurses xxhash lz4 popt libyaml openssl zstd gcc rsync ruby"
 
 # Add musl bin to path
 PATH=/usr/local/share/musl/bin:$PATH
@@ -261,7 +261,7 @@ for i in $(seq 0 $((${#urls[@]} - 1))); do
   update_device_json "${name}" "${version}"
 done
 
-## workaround https://github.com/skycocker/chromebrew/issues/3305
+## workaround https://github.com/chromebrew/chromebrew/issues/3305
 sudo ldconfig &> /dev/null || true
 echo_info "\nCreating symlink to 'crew' in ${CREW_PREFIX}/bin/"
 echo -e "${GRAY}"

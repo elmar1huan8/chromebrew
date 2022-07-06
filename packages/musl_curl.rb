@@ -3,24 +3,24 @@ require 'package'
 class Musl_curl < Package
   description 'Command line tool and library for transferring data with URLs.'
   homepage 'https://curl.se/'
-  @_ver = '7.82.0'
+  @_ver = '7.84.0'
   version @_ver.to_s
   license 'curl'
   compatibility 'all'
   source_url "https://curl.se/download/curl-#{@_ver}.tar.xz"
-  source_sha256 '0aaa12d7bd04b0966254f2703ce80dd5c38dbbd76af0297d3d690cdce58a583c'
+  source_sha256 '2d118b43f547bfe5bae806d8d47b4e596ea5b25a6c1f080aef49fbcd817c5db8'
 
   binary_url({
-    aarch64: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/musl_curl/7.82.0_armv7l/musl_curl-7.82.0-chromeos-armv7l.tar.zst',
-     armv7l: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/musl_curl/7.82.0_armv7l/musl_curl-7.82.0-chromeos-armv7l.tar.zst',
-       i686: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/musl_curl/7.82.0_i686/musl_curl-7.82.0-chromeos-i686.tar.zst',
-     x86_64: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/musl_curl/7.82.0_x86_64/musl_curl-7.82.0-chromeos-x86_64.tar.zst'
+    aarch64: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/musl_curl/7.84.0_armv7l/musl_curl-7.84.0-chromeos-armv7l.tar.zst',
+     armv7l: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/musl_curl/7.84.0_armv7l/musl_curl-7.84.0-chromeos-armv7l.tar.zst',
+       i686: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/musl_curl/7.84.0_i686/musl_curl-7.84.0-chromeos-i686.tar.zst',
+     x86_64: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/musl_curl/7.84.0_x86_64/musl_curl-7.84.0-chromeos-x86_64.tar.zst'
   })
   binary_sha256({
-    aarch64: 'c25654335e87ca6df017f9bdc7ab7d0b32fbb3a7a480f02a9bc89a4154f8838d',
-     armv7l: 'c25654335e87ca6df017f9bdc7ab7d0b32fbb3a7a480f02a9bc89a4154f8838d',
-       i686: '845e1165edd5c75c808a7a4bb4101482cb7acf10640588556303c0b9b685ae46',
-     x86_64: '1f62fda183e6d01100e017b7072c32bc363306c08d3aa365b5804de5ef56ffd1'
+    aarch64: '2c21d0bbc43fd965743a37b49bb53663e510df3940e00b83cd6fd0f91e0ae085',
+     armv7l: '2c21d0bbc43fd965743a37b49bb53663e510df3940e00b83cd6fd0f91e0ae085',
+       i686: '1e27afa774b53a5c0db25b7779f09997540870cb549ce01a57e44a4d5e93a8f1',
+     x86_64: '403fb26245e958681aef632dd859ce645ab2339cc72ad46e7ad983c789976448'
   })
 
   depends_on 'ca_certificates' => :build
@@ -39,6 +39,18 @@ class Musl_curl < Package
   is_musl
   is_static
   patchelf
+
+  def self.patch
+    # Fix arm build error
+    # easy_lock.h:56:7: error: implicit declaration of function 'sched_yield' [-Werror=implicit-function-declaration]
+    # via https://github.com/curl/curl/pull/9054 & https://github.com/curl/curl/pull/9056
+    downloader 'https://github.com/curl/curl/commit/e2e7f54b7bea521fa8373095d0f43261a720cda0.patch',
+               '9b011c957cedcc089b53399f31328b1ebb7ec87dd5eeefd1f83c7fc8741405a0'
+    system 'patch -p1 -i e2e7f54b7bea521fa8373095d0f43261a720cda0.patch'
+    downloader 'https://github.com/curl/curl/commit/5a1a892565443fa4145888c6150da65c9a33d15c.patch',
+               '9a83b1b8b7fa3f6951bf890d6af7bc37c830d0741849d8b1e98acfb5dbdaf563'
+    system 'patch -p1 -i 5a1a892565443fa4145888c6150da65c9a33d15c.patch'
+  end
 
   def self.build
     @curl_lib_deps = "#{CREW_MUSL_PREFIX}/lib/libunbound.a \
@@ -95,7 +107,7 @@ class Musl_curl < Package
     # Fail if built curl is not statically built.
     system 'readelf -d src/curl | grep "Shared library" && exit 1 || true'
     # Fail if built curl unable to download files
-    system 'src/curl -Lf https://github.com/skycocker/chromebrew/raw/master/install.sh -o /dev/null || exit 1'
+    system 'src/curl -Lf https://github.com/chromebrew/chromebrew/raw/master/install.sh -o /dev/null || exit 1'
   end
 
   def self.install

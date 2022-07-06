@@ -4,32 +4,32 @@ class Py3_packaging < Package
   description 'Packaging provides core utilities for Python packages'
   homepage 'https://packaging.pypa.io/'
   @_ver = '21.3'
-  version @_ver
+  version "#{@_ver}-2"
   license 'BSD-2 or Apache-2.0'
   compatibility 'all'
   source_url 'https://github.com/pypa/packaging.git'
   git_hashtag @_ver
 
   binary_url({
-    aarch64: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/py3_packaging/21.3_armv7l/py3_packaging-21.3-chromeos-armv7l.tpxz',
-     armv7l: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/py3_packaging/21.3_armv7l/py3_packaging-21.3-chromeos-armv7l.tpxz',
-       i686: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/py3_packaging/21.3_i686/py3_packaging-21.3-chromeos-i686.tpxz',
-     x86_64: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/py3_packaging/21.3_x86_64/py3_packaging-21.3-chromeos-x86_64.tpxz'
+    aarch64: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/py3_packaging/21.3-2_armv7l/py3_packaging-21.3-2-chromeos-armv7l.tar.zst',
+     armv7l: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/py3_packaging/21.3-2_armv7l/py3_packaging-21.3-2-chromeos-armv7l.tar.zst',
+       i686: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/py3_packaging/21.3-2_i686/py3_packaging-21.3-2-chromeos-i686.tar.zst',
+     x86_64: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/py3_packaging/21.3-2_x86_64/py3_packaging-21.3-2-chromeos-x86_64.tar.zst'
   })
   binary_sha256({
-    aarch64: '469e4712247c92fac3ffd8d494fc729e25d434ac9fc6a8fe36b781a4da6e5b37',
-     armv7l: '469e4712247c92fac3ffd8d494fc729e25d434ac9fc6a8fe36b781a4da6e5b37',
-       i686: '5c9b22be25b6e750af2e79f107243c0ce4aaa01fdeb031650602152bb920b3bf',
-     x86_64: 'c18e092f10ce84cb715fa94b38ee38af4c99ddeeaeb6bfc5a5c4b5408b44135d'
+    aarch64: 'dddc4ef138725db002e41214df0b79e22719b930d0eb8b91b7e2059f1c3b64e9',
+     armv7l: 'dddc4ef138725db002e41214df0b79e22719b930d0eb8b91b7e2059f1c3b64e9',
+       i686: 'c30dc89d108fabb94855bc0bab22ffb4b9e39d6113f67b64de76cb717c55477a',
+     x86_64: '2df6b24cb4a867e840a1380bf0ce7d12b60f2a91de2a2c2df4ead79317233f12'
   })
 
-  depends_on 'py3_setuptools' => :build
+  depends_on 'py3_pyparsing'
 
   def self.build
-    system "python3 setup.py build #{PY3_SETUP_BUILD_OPTIONS}"
+    system "SETUPTOOLS_SCM_PRETEND_VERSION=#{@_ver} python3 -m build #{PY3_BUILD_OPTIONS}"
   end
 
   def self.install
-    system "python3 setup.py install #{PY_SETUP_INSTALL_OPTIONS}"
+    system "python3 -m installer #{PY3_INSTALLER_OPTIONS}"
   end
 end
