@@ -3,34 +3,36 @@ require 'package'
 class Jsonc < Package
   description 'JSON-C implements a reference counting object model that allows you to easily construct JSON objects in C, output them as JSON formatted strings and parse JSON formatted strings back into the C representation of JSON objects.'
   homepage 'https://github.com/json-c/json-c'
-  version '0.13.1-20180305-1'
+  version '0.16-1741bcd'
   license 'MIT'
   compatibility 'all'
-  source_url 'https://github.com/json-c/json-c/archive/json-c-0.13.1-20180305.tar.gz'
-  source_sha256 '5d867baeb7f540abe8f3265ac18ed7a24f91fe3c5f4fd99ac3caba0708511b90'
+  source_url 'https://github.com/json-c/json-c.git'
+  git_hashtag '1741bcd3eaf2603b8256735560de9b0d3244d62f'
 
-  binary_url ({
-    aarch64: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/jsonc/0.13.1-20180305-1_armv7l/jsonc-0.13.1-20180305-1-chromeos-armv7l.tar.xz',
-     armv7l: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/jsonc/0.13.1-20180305-1_armv7l/jsonc-0.13.1-20180305-1-chromeos-armv7l.tar.xz',
-       i686: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/jsonc/0.13.1-20180305-1_i686/jsonc-0.13.1-20180305-1-chromeos-i686.tar.xz',
-     x86_64: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/jsonc/0.13.1-20180305-1_x86_64/jsonc-0.13.1-20180305-1-chromeos-x86_64.tar.xz',
+  binary_url({
+    aarch64: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/jsonc/0.16-1741bcd_armv7l/jsonc-0.16-1741bcd-chromeos-armv7l.tar.zst',
+     armv7l: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/jsonc/0.16-1741bcd_armv7l/jsonc-0.16-1741bcd-chromeos-armv7l.tar.zst',
+       i686: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/jsonc/0.16-1741bcd_i686/jsonc-0.16-1741bcd-chromeos-i686.tar.zst',
+     x86_64: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/jsonc/0.16-1741bcd_x86_64/jsonc-0.16-1741bcd-chromeos-x86_64.tar.zst'
   })
-  binary_sha256 ({
-    aarch64: 'c00bac86e26ee85be838fd5ab2ac422f144a86d7049be13809e389607e3ca97b',
-     armv7l: 'c00bac86e26ee85be838fd5ab2ac422f144a86d7049be13809e389607e3ca97b',
-       i686: 'c72d10147176e9ab64a91d933b8c4d2c6c9e62b95a63f3edf17cb97bbf5a066e',
-     x86_64: 'a39d059131cb8f1fa0b436199433f634d2f991594c2e94fe03e5388230637fc7',
+  binary_sha256({
+    aarch64: '5bc684f839c15992a90ee87bfce2b982897cb991ad0e63aecccb193a73705bb4',
+     armv7l: '5bc684f839c15992a90ee87bfce2b982897cb991ad0e63aecccb193a73705bb4',
+       i686: 'e1becda31e7af8b56b106df854b6c6b4722bc67a5cd7ddac970a66f8ea55f263',
+     x86_64: 'e0926875fa85dce385118551f8294d5a4e7455171a49818bab9c9b8040bc8c06'
   })
+
+  depends_on 'glibc' # R
 
   def self.build
-    system './configure',
-           "--prefix=#{CREW_PREFIX}",
-           "--libdir=#{CREW_LIB_PREFIX}"
-    system 'make'
+    system "cmake -B builddir #{CREW_CMAKE_OPTIONS} \
+            -G Ninja"
+    system 'samu -C builddir'
   end
 
   def self.install
-    system 'make', "DESTDIR=#{CREW_DEST_DIR}", 'install'
-    FileUtils.ln_s "#{CREW_LIB_PREFIX}/libjson-c.so.4", "#{CREW_DEST_LIB_PREFIX}/libjson-c.so.3"
+    system "DESTDIR=#{CREW_DEST_DIR} samu -C builddir install"
+    FileUtils.ln_s "#{CREW_LIB_PREFIX}/libjson-c.so", "#{CREW_DEST_LIB_PREFIX}/libjson-c.so.3"
+    FileUtils.ln_s "#{CREW_LIB_PREFIX}/libjson-c.so", "#{CREW_DEST_LIB_PREFIX}/libjson-c.so.4"
   end
 end

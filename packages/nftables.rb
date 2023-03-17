@@ -1,54 +1,49 @@
+# Adapted from Arch Linux nftables PKGBUILD at:
+# https://github.com/archlinux/svntogit-packages/raw/packages/nftables/trunk/PKGBUILD
+
 require 'package'
 
 class Nftables < Package
-  description 'nftables replaces the popular {ip,ip6,arp,eb}tables.'
+  description 'Netfilter tables userspace tools'
   homepage 'https://netfilter.org/projects/nftables/'
-  compatibility 'all'
-  version '0.9.6-1'
-  license 'GPL-2'
-  source_url 'https://netfilter.org/projects/nftables/files/nftables-0.9.6.tar.bz2'
-  source_sha256 '68d6fdfe8ab02303e6b1f13968a4022da5b0120110eaee3233d806857937b66e'
+  version '1.0.7'
+  license 'GPL2'
+  compatibility 'aarch64 armv7l x86_64'
+  source_url 'https://netfilter.org/projects/nftables/files/nftables-1.0.7.tar.xz'
+  source_sha256 'c12ac941fff9adaedf17367d5ce213789b98a0d314277bc22b3d71e10891f412'
 
-  binary_url ({
-    aarch64: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/nftables/0.9.6-1_armv7l/nftables-0.9.6-1-chromeos-armv7l.tar.xz',
-     armv7l: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/nftables/0.9.6-1_armv7l/nftables-0.9.6-1-chromeos-armv7l.tar.xz',
-       i686: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/nftables/0.9.6-1_i686/nftables-0.9.6-1-chromeos-i686.tar.xz',
-     x86_64: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/nftables/0.9.6-1_x86_64/nftables-0.9.6-1-chromeos-x86_64.tar.xz',
+  binary_url({
+    aarch64: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/nftables/1.0.7_armv7l/nftables-1.0.7-chromeos-armv7l.tar.zst',
+     armv7l: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/nftables/1.0.7_armv7l/nftables-1.0.7-chromeos-armv7l.tar.zst',
+     x86_64: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/nftables/1.0.7_x86_64/nftables-1.0.7-chromeos-x86_64.tar.zst'
   })
-  binary_sha256 ({
-    aarch64: '87b2be9b1f371c684d5d21c111e8baf96f61813963ee38726c0fde7dd089eb47',
-     armv7l: '87b2be9b1f371c684d5d21c111e8baf96f61813963ee38726c0fde7dd089eb47',
-       i686: '08f6d4bd5f6f7e3a3b4dea10fd5cabd96001ac72e85c11757eff818a5eea1ea7',
-     x86_64: 'af2c671949dde45656db452e635af6f04e66b39c370ae0807afee0ad63a1e978',
+  binary_sha256({
+    aarch64: 'f3f13ae9973a69553bfc0105a4437f5ff049331f1323a1839e5e7a522f6d00f8',
+     armv7l: 'f3f13ae9973a69553bfc0105a4437f5ff049331f1323a1839e5e7a522f6d00f8',
+     x86_64: 'ea7b3b864f346788e228516ee5a170ec37ad5f798e977df045b46673995704cb'
   })
 
-  depends_on 'help2man'
-  depends_on 'jansson'
-  depends_on 'libmnl'
-  depends_on 'libnftnl'
-  depends_on 'readline'
+  depends_on 'asciidoc' => :build
+  depends_on 'glibc' # R
+  depends_on 'jansson' # R
+  depends_on 'libmnl' # R
+  depends_on 'libnftnl' # R
+  depends_on 'readline' # R
 
   def self.build
-    system "LIBS=\"-lncurses\" ./configure \
+    system 'autoreconf -fiv'
+    system "./configure \
            --prefix=#{CREW_PREFIX} \
            --libdir=#{CREW_LIB_PREFIX} \
-           --disable-man-doc \
+           --sysconfdir=#{CREW_PREFIX}/etc \
            --with-json \
-           --with-mini-gmp"
+           --with-cli=readline \
+           --with-mini-gmp \
+           --disable-debug"
     system 'make'
   end
 
   def self.install
-    FileUtils.mkdir_p "#{CREW_DEST_PREFIX}/man/man1"
-    system "touch #{CREW_DEST_PREFIX}/man/man1/nft.1.gz"
-    system "make", "DESTDIR=#{CREW_DEST_DIR}", "install"
-  end
-
-  def self.postinstall
-    system "help2man -n 'userspace command line tool for nftables' -s 1 -N --no-discard-stderr '#{CREW_PREFIX}/sbin/nft -h' > nft.1"
-    system "sed -i 's,Usage:,nft,g' nft.1"
-    system "sed -i 's,USAGE:,NFT,g' nft.1"
-    system "gzip -9 nft.1"
-    system "install -m644 nft.1.gz #{CREW_PREFIX}/man/man1/nft.1.gz"
+    system 'make', "DESTDIR=#{CREW_DEST_DIR}", 'install'
   end
 end

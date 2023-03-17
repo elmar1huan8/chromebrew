@@ -3,23 +3,24 @@ require 'package'
 class Librsvg < Package
   description 'SVG library for GNOME'
   homepage 'https://wiki.gnome.org/Projects/LibRsvg'
-  version '2.52.8'
+  @_ver = '2.55.91'
+  version @_ver
   license 'LGPL-2+'
   compatibility 'all'
   source_url 'https://gitlab.gnome.org/GNOME/librsvg.git'
-  git_hashtag version
+  git_hashtag @_ver
 
   binary_url({
-    aarch64: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/librsvg/2.52.8_armv7l/librsvg-2.52.8-chromeos-armv7l.tar.zst',
-     armv7l: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/librsvg/2.52.8_armv7l/librsvg-2.52.8-chromeos-armv7l.tar.zst',
-       i686: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/librsvg/2.52.8_i686/librsvg-2.52.8-chromeos-i686.tar.zst',
-     x86_64: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/librsvg/2.52.8_x86_64/librsvg-2.52.8-chromeos-x86_64.tar.zst'
+    aarch64: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/librsvg/2.55.91_armv7l/librsvg-2.55.91-chromeos-armv7l.tar.zst',
+     armv7l: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/librsvg/2.55.91_armv7l/librsvg-2.55.91-chromeos-armv7l.tar.zst',
+       i686: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/librsvg/2.55.91_i686/librsvg-2.55.91-chromeos-i686.tar.zst',
+     x86_64: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/librsvg/2.55.91_x86_64/librsvg-2.55.91-chromeos-x86_64.tar.zst'
   })
   binary_sha256({
-    aarch64: '3445bbd63ea8dd5c37285cb822cedaf9eb48fe040bbf40f46dbbb8e59c336d81',
-     armv7l: '3445bbd63ea8dd5c37285cb822cedaf9eb48fe040bbf40f46dbbb8e59c336d81',
-       i686: '50eef90138769cda46c1ab822bc756aa877f548026050e629d2654964060215b',
-     x86_64: 'f84307e2d4c55dbd92d11e0b9184918304733b4c70ef7ffe09b183258de91bdf'
+    aarch64: 'ddc33a6810e6759d26089586648a52f4eee799e605e8538e36720905d42d0264',
+     armv7l: 'ddc33a6810e6759d26089586648a52f4eee799e605e8538e36720905d42d0264',
+       i686: 'fdc274ddb62267b9cf5014132c6633753ac5e1a51be880776fa74bb0d02a4376',
+     x86_64: '10094c5a19052f73b7e59de9c7c6966213eadd63c7982dd4016fef0f9d63cc1f'
   })
 
   depends_on 'fontconfig'
@@ -29,12 +30,23 @@ class Librsvg < Package
   depends_on 'glib'
   depends_on 'gobject_introspection'
   depends_on 'harfbuzz'
+  depends_on 'icu4c'
   depends_on 'libcroco'
   depends_on 'libjpeg'
   depends_on 'pango'
+  depends_on 'py3_smartypants' => :build
   depends_on 'rust' => :build
   depends_on 'py3_six' => :build
   depends_on 'vala' => :build
+  depends_on 'expat' # R
+  depends_on 'freetype' # R
+  depends_on 'gcc' # R
+  depends_on 'glibc' # R
+  depends_on 'libpng' # R
+  depends_on 'libxml2' # R
+  depends_on 'zlibpkg' # R
+  depends_on 'cairo' # R
+
   gnome
 
   def self.build
@@ -46,8 +58,7 @@ class Librsvg < Package
       #{CREW_OPTIONS} \
       --enable-introspection=yes \
       --enable-vala=yes \
-      --enable-pixbuf-loader \
-      --disable-tools"
+      --enable-pixbuf-loader"
     system 'make'
   end
 
@@ -56,9 +67,9 @@ class Librsvg < Package
   end
 
   def self.postinstall
-    if File.exist?("#{CREW_PREFIX}/bin/gdk-pixbuf-query-loaders")
-      system 'gdk-pixbuf-query-loaders',
-             '--update-cache'
-    end
+    return unless File.exist?("#{CREW_PREFIX}/bin/gdk-pixbuf-query-loaders")
+
+    system 'gdk-pixbuf-query-loaders',
+           '--update-cache'
   end
 end

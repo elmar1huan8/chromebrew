@@ -6,44 +6,42 @@ require 'package'
 class Upx < Package
   description 'Extendable, high-performance executable packer for several executable formats'
   homepage 'https://github.com/upx/upx'
-  version '4.0.0-0108'
+  version '4.0.3-f4c4d51'
   license 'custom GPL2'
   compatibility 'all'
   source_url 'https://github.com/upx/upx.git'
-  git_hashtag '0108c1c34ef7fbcea99f6071dbd691670e43635f'
+  git_hashtag 'f4c4d5148e4f8c9fc5bfd2c2e836ee2aa27fbaab'
 
   binary_url({
-    aarch64: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/upx/4.0.0-0108_armv7l/upx-4.0.0-0108-chromeos-armv7l.tpxz',
-     armv7l: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/upx/4.0.0-0108_armv7l/upx-4.0.0-0108-chromeos-armv7l.tpxz',
-       i686: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/upx/4.0.0-0108_i686/upx-4.0.0-0108-chromeos-i686.tpxz',
-     x86_64: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/upx/4.0.0-0108_x86_64/upx-4.0.0-0108-chromeos-x86_64.tpxz'
+    aarch64: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/upx/4.0.3-f4c4d51_armv7l/upx-4.0.3-f4c4d51-chromeos-armv7l.tar.zst',
+     armv7l: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/upx/4.0.3-f4c4d51_armv7l/upx-4.0.3-f4c4d51-chromeos-armv7l.tar.zst',
+       i686: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/upx/4.0.3-f4c4d51_i686/upx-4.0.3-f4c4d51-chromeos-i686.tar.zst',
+     x86_64: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/upx/4.0.3-f4c4d51_x86_64/upx-4.0.3-f4c4d51-chromeos-x86_64.tar.zst'
   })
   binary_sha256({
-    aarch64: 'e10c5ea814b6983525a0ac4b6c108999157dcd5d50b7fafd22c924fab451696d',
-     armv7l: 'e10c5ea814b6983525a0ac4b6c108999157dcd5d50b7fafd22c924fab451696d',
-       i686: 'b40da75e3bc758432029f18625ed3439997f8e5f81d536996c326eee58c6dc20',
-     x86_64: '05d13bf22d83b16e8037d1f744b601bada2821e09990bd6f00b5e99248f3e19a'
+    aarch64: 'a6eb586e86e3566185e16873529325bc4828cf1542c02c1347eec9ef06f68309',
+     armv7l: 'a6eb586e86e3566185e16873529325bc4828cf1542c02c1347eec9ef06f68309',
+       i686: '83bf7c39b72055cd7e035d8d70def2c82252151edd3cc0f6f203cac7b35c47dc',
+     x86_64: 'f68d21c492b38e8a7e05cf02ac74455dc60799bd7734f942b188cff8b8992f84'
   })
 
-  depends_on 'ucl'
-
-  def self.patch
-    # Disable a warning. upx believes this is not a release version if the git revision is set.
-    system "sed -i 's/bool warn = true/bool warn = false/' src/main.cpp"
-  end
+  # depends_on 'ucl'
+  depends_on 'gcc' # R
+  depends_on 'glibc' # R
 
   def self.build
-    system "#{CREW_ENV_OPTIONS} make  \
-      CHECK_WHITESPACE=/bin/true \
-      UPX_LZMA_VERSION=0x465 \
-      UPX_LZMADIR=`pwd` \
-      all"
+    system "cmake -B builddir #{CREW_CMAKE_OPTIONS} \
+      -DUPX_CONFIG_DISABLE_GITREV=true \
+      -G Ninja"
+    system 'samu -C builddir'
+  end
+
+  def self.check
+    # samu does not work here.
+    system 'ninja test -C builddir'
   end
 
   def self.install
-    FileUtils.mkdir_p "#{CREW_DEST_PREFIX}/bin"
-    FileUtils.mkdir_p "#{CREW_DEST_MAN_PREFIX}/man1"
-    FileUtils.install 'src/upx.out', "#{CREW_DEST_PREFIX}/bin/upx", mode: 0o755
-    FileUtils.install 'doc/upx.1', "#{CREW_DEST_MAN_PREFIX}/man1/upx.1", mode: 0o644
+    system "DESTDIR=#{CREW_DEST_DIR} samu -C builddir install"
   end
 end

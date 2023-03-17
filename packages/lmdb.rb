@@ -28,7 +28,7 @@ class Lmdb < Package
   def self.patch
     system "sed -i 's,libdir = $(exec_prefix)/lib,libdir = $(exec_prefix)/lib#{CREW_LIB_SUFFIX},g' libraries/liblmdb/Makefile"
     system "sed -i 's,prefix	= /usr/local,prefix	= #{CREW_PREFIX},g' libraries/liblmdb/Makefile"
-    system "sed -i 's,OPT = -O2 -g,OPT = -O2 -g -flto,g' libraries/liblmdb/Makefile"
+    system "sed -i 's,OPT = -O2 -g,OPT = -O2 -g -flto=auto,g' libraries/liblmdb/Makefile"
   end
 
   def self.build
@@ -54,6 +54,6 @@ class Lmdb < Package
       system "make DESTDIR=#{CREW_DEST_DIR} install"
     end
     FileUtils.mkdir_p "#{CREW_DEST_LIB_PREFIX}/pkgconfig/"
-    IO.write("#{CREW_DEST_LIB_PREFIX}/pkgconfig/lmdb.pc", @lmdb_pc)
+    File.write("#{CREW_DEST_LIB_PREFIX}/pkgconfig/lmdb.pc", @lmdb_pc)
   end
 end

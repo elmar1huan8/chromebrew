@@ -3,24 +3,24 @@ require 'package'
 class Libcurl < Package
   description 'Command line tool and library for transferring data with URLs.'
   homepage 'https://curl.se/'
-  @_ver = '7.84.0'
-  version @_ver.to_s
+  @_ver = '7.88.1'
+  version @_ver
   license 'curl'
   compatibility 'all'
-  source_url "https://curl.se/download/curl-#{@_ver}.tar.xz"
-  source_sha256 '2d118b43f547bfe5bae806d8d47b4e596ea5b25a6c1f080aef49fbcd817c5db8'
+  source_url 'https://curl.se/download/curl-7.88.1.tar.xz'
+  source_sha256 '1dae31b2a7c1fe269de99c0c31bb488346aab3459b5ffca909d6938249ae415f'
 
   binary_url({
-    aarch64: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/libcurl/7.84.0_armv7l/libcurl-7.84.0-chromeos-armv7l.tar.zst',
-     armv7l: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/libcurl/7.84.0_armv7l/libcurl-7.84.0-chromeos-armv7l.tar.zst',
-       i686: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/libcurl/7.84.0_i686/libcurl-7.84.0-chromeos-i686.tar.zst',
-     x86_64: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/libcurl/7.84.0_x86_64/libcurl-7.84.0-chromeos-x86_64.tar.zst'
+    aarch64: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/libcurl/7.88.1_armv7l/libcurl-7.88.1-chromeos-armv7l.tar.zst',
+     armv7l: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/libcurl/7.88.1_armv7l/libcurl-7.88.1-chromeos-armv7l.tar.zst',
+       i686: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/libcurl/7.88.1_i686/libcurl-7.88.1-chromeos-i686.tar.zst',
+     x86_64: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/libcurl/7.88.1_x86_64/libcurl-7.88.1-chromeos-x86_64.tar.zst'
   })
   binary_sha256({
-    aarch64: 'e218858ab99411d1a5c5d98206350c9beb6c34f0ccee3850033345411d7fc7d8',
-     armv7l: 'e218858ab99411d1a5c5d98206350c9beb6c34f0ccee3850033345411d7fc7d8',
-       i686: '05bfd4cd3d02987e3f6f45b9b069002679d097c3547f0b9b370b7ab60b2c9ef7',
-     x86_64: '58773af98bf5db2ea628e438989e5bd5ccece887117c3c0f978e2ea8d551d212'
+    aarch64: 'ef8cafeffc06c09cc042cec8fb79a3dc75cca5ea6d39ce47a6f2e78f607bd211',
+     armv7l: 'ef8cafeffc06c09cc042cec8fb79a3dc75cca5ea6d39ce47a6f2e78f607bd211',
+       i686: 'df6c5eeeb071abf662514a5685ac611f9bba137d90975e3af8304d5b3a521993',
+     x86_64: 'd95afcd1276483a4a384a3490fb0f841685b18bc406c3d6cd8ad202ecc26516d'
   })
 
   depends_on 'brotli' # R
@@ -32,37 +32,21 @@ class Libcurl < Package
   depends_on 'libnghttp2' # R
   depends_on 'libpsl' # R
   depends_on 'libssh' # R
-  depends_on 'libunbound' # ?
+  depends_on 'libunistring' # R
   depends_on 'openldap' # R
   depends_on 'openssl' # R
-  depends_on 'py3_pip' => :build
+  depends_on 'python3' => :build
   depends_on 'rust' => :build
   depends_on 'valgrind' => :build
   depends_on 'zlibpkg' # R
   depends_on 'zstd' # R
 
-  def self.patch
-    # Fix arm build error
-    # easy_lock.h:56:7: error: implicit declaration of function 'sched_yield' [-Werror=implicit-function-declaration]
-    # via https://github.com/curl/curl/pull/9054 & https://github.com/curl/curl/pull/9056
-    downloader 'https://github.com/curl/curl/commit/e2e7f54b7bea521fa8373095d0f43261a720cda0.patch',
-               '9b011c957cedcc089b53399f31328b1ebb7ec87dd5eeefd1f83c7fc8741405a0'
-    system 'patch -p1 -i e2e7f54b7bea521fa8373095d0f43261a720cda0.patch'
-    downloader 'https://github.com/curl/curl/commit/5a1a892565443fa4145888c6150da65c9a33d15c.patch',
-               '9a83b1b8b7fa3f6951bf890d6af7bc37c830d0741849d8b1e98acfb5dbdaf563'
-    system 'patch -p1 -i 5a1a892565443fa4145888c6150da65c9a33d15c.patch'
-  end
+  no_patchelf
 
   def self.build
-    @libssh = '--with-libssh'
-    case ARCH
-    when 'i686'
-      @libssh = '--without-libssh'
-    end
-
     system '[ -x configure ] || autoreconf -fvi'
     system 'filefix'
-    system "#{CREW_ENV_OPTIONS} ./configure #{CREW_OPTIONS} \
+    system "mold -run ./configure #{CREW_OPTIONS} \
       --disable-maintainer-mode \
       --enable-ares \
       --enable-ipv6 \
@@ -71,11 +55,11 @@ class Libcurl < Package
       --with-ca-bundle=#{CREW_PREFIX}/etc/ssl/certs/ca-certificates.crt \
       --with-ca-fallback \
       --with-ca-path=#{CREW_PREFIX}/etc/ssl/certs \
-      #{@libssh} \
+      --with-libssh \
       --with-openssl \
       --without-gnutls \
       --without-librtmp"
-    system 'make'
+    system 'mold -run make'
   end
 
   def self.install

@@ -3,56 +3,56 @@ require 'package'
 class Libheif < Package
   description 'libheif is a ISO/IEC 23008-12:2017 HEIF file format decoder and encoder.'
   homepage 'https://github.com/strukturag/libheif'
-  @_ver = '1.11.0'
-  version "#{@_ver}-2"
+  @_ver = '1.15.1'
+  version @_ver
   license 'GPL-3'
   compatibility 'all'
-  source_url "https://github.com/strukturag/libheif/releases/download/v#{@_ver}/libheif-#{@_ver}.tar.gz"
-  source_sha256 'c550938f56ff6dac83702251a143f87cb3a6c71a50d8723955290832d9960913'
+  source_url 'https://github.com/strukturag/libheif.git'
+  git_hashtag "v#{@_ver}"
 
   binary_url({
-    aarch64: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/libheif/1.11.0-2_armv7l/libheif-1.11.0-2-chromeos-armv7l.tar.xz',
-     armv7l: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/libheif/1.11.0-2_armv7l/libheif-1.11.0-2-chromeos-armv7l.tar.xz',
-       i686: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/libheif/1.11.0-2_i686/libheif-1.11.0-2-chromeos-i686.tar.xz',
-     x86_64: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/libheif/1.11.0-2_x86_64/libheif-1.11.0-2-chromeos-x86_64.tar.xz'
+    aarch64: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/libheif/1.15.1_armv7l/libheif-1.15.1-chromeos-armv7l.tar.zst',
+     armv7l: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/libheif/1.15.1_armv7l/libheif-1.15.1-chromeos-armv7l.tar.zst',
+       i686: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/libheif/1.15.1_i686/libheif-1.15.1-chromeos-i686.tar.zst',
+     x86_64: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/libheif/1.15.1_x86_64/libheif-1.15.1-chromeos-x86_64.tar.zst'
   })
   binary_sha256({
-    aarch64: '741663915e39e3f343c5d084423597484477eb49dc719f1395c62f84501ba8d9',
-     armv7l: '741663915e39e3f343c5d084423597484477eb49dc719f1395c62f84501ba8d9',
-       i686: '73ad610bbde6b2adb6ac5171efb9078e26ca9a252aece71688e5bd85b0478f86',
-     x86_64: '00cdd26729e9af1d85ca26edd0094195cab10c53bb07158a892293ef94e033af'
+    aarch64: 'ba384b24e42ff1198b62cf6d58d90f0e10c758654d2a2efd3172e983997b88e0',
+     armv7l: 'ba384b24e42ff1198b62cf6d58d90f0e10c758654d2a2efd3172e983997b88e0',
+       i686: 'f605879bcb28e7d13b95f2116f180950e5f6889cba5c37172b3505e3deac2bcf',
+     x86_64: 'd017e2cbfdc71a68b7ee56f0ec473ad26c3ed330abb3ecb3d0864aed315cd539'
   })
 
-  depends_on 'dav1d'
-  depends_on 'libaom'
-  depends_on 'libde265'
-  depends_on 'libjpeg'
-  depends_on 'libpng'
-  depends_on 'libx265'
-  depends_on 'rav1e'
+  depends_on 'dav1d' # R
+  depends_on 'gcc' # R
+  depends_on 'gdk_pixbuf' # R
+  depends_on 'glibc' # R
+  depends_on 'glib' # R
+  depends_on 'libaom' # R
+  depends_on 'libde265' # R
+  depends_on 'libjpeg' # R
+  depends_on 'libpng' # R
+  depends_on 'libtiff' # L
+  depends_on 'libx265' # R
+  depends_on 'rav1e' # R
+  depends_on 'zlibpkg' # R
+  depends_on 'svt_av1' # R
 
   def self.build
-    Dir.mkdir 'builddir'
-    Dir.chdir 'builddir' do
-      system "env CFLAGS='-pipe -fno-stack-protector -U_FORTIFY_SOURCE -flto=auto' \
-      CXXFLAGS='-pipe -fno-stack-protector -U_FORTIFY_SOURCE -flto=auto' \
-      LDFLAGS='-fno-stack-protector -U_FORTIFY_SOURCE -flto=auto' \
-      cmake \
+    system "cmake -B builddir \
         -G Ninja \
-        #{CREW_CMAKE_OPTIONS} \
-        .."
-    end
-    system 'ninja -C builddir'
+        #{CREW_CMAKE_OPTIONS}"
+    system "#{CREW_NINJA} -C builddir"
   end
 
   def self.install
-    system "DESTDIR=#{CREW_DEST_DIR} ninja -C builddir install"
+    system "DESTDIR=#{CREW_DEST_DIR} #{CREW_NINJA} -C builddir install"
   end
 
   def self.postinstall
-    if File.exist?("#{CREW_PREFIX}/bin/gdk-pixbuf-query-loaders")
-      system 'gdk-pixbuf-query-loaders',
-             '--update-cache'
-    end
+    return unless File.exist?("#{CREW_PREFIX}/bin/gdk-pixbuf-query-loaders")
+
+    system 'gdk-pixbuf-query-loaders',
+           '--update-cache'
   end
 end

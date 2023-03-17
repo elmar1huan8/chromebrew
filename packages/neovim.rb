@@ -3,35 +3,102 @@ require 'package'
 class Neovim < Package
   description 'Neovim is a refactor, and sometimes redactor, in the tradition of Vim (which itself derives from Stevie).'
   homepage 'https://neovim.io/'
-  version '0.4.4'
+  version '0.8.2'
   license 'Apache-2.0 and vim'
-  compatibility 'aarch64,armv7l,x86_64'
-  source_url 'https://github.com/neovim/neovim/archive/v0.4.4.tar.gz'
-  source_sha256 '2f76aac59363677f37592e853ab2c06151cca8830d4b3fe4675b4a52d41fc42c'
+  compatibility 'all'
+  source_url 'https://github.com/neovim/neovim.git'
+  git_hashtag "v#{version}"
 
-  binary_url ({
-    aarch64: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/neovim/0.4.4_armv7l/neovim-0.4.4-chromeos-armv7l.tar.xz',
-     armv7l: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/neovim/0.4.4_armv7l/neovim-0.4.4-chromeos-armv7l.tar.xz',
-     x86_64: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/neovim/0.4.4_x86_64/neovim-0.4.4-chromeos-x86_64.tar.xz',
+  binary_url({
+    aarch64: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/neovim/0.8.2_armv7l/neovim-0.8.2-chromeos-armv7l.tar.zst',
+     armv7l: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/neovim/0.8.2_armv7l/neovim-0.8.2-chromeos-armv7l.tar.zst',
+       i686: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/neovim/0.8.2_i686/neovim-0.8.2-chromeos-i686.tar.zst',
+     x86_64: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/neovim/0.8.2_x86_64/neovim-0.8.2-chromeos-x86_64.tar.zst'
   })
-  binary_sha256 ({
-    aarch64: '4f070268cb5386ad3cff2c3a5e7f332a79ce28335ec13f17763d2cb0c5a6083b',
-     armv7l: '4f070268cb5386ad3cff2c3a5e7f332a79ce28335ec13f17763d2cb0c5a6083b',
-     x86_64: '013241fb25fa27c2247ade5cffdc3694dcd58e4783c7b7a4bf339b92332804d5',
+  binary_sha256({
+    aarch64: '8e5bcc8ada8eedcd5603c7061860dd56aef16171667fc97d6279d6c17bf25385',
+     armv7l: '8e5bcc8ada8eedcd5603c7061860dd56aef16171667fc97d6279d6c17bf25385',
+       i686: '4fff03cc692bc7875f5c25d6a108a12226b7cc4df17a685ed79661aaa1578f08',
+     x86_64: '111ec2f1175b8074b48d6cf6b0720ab657ffc3e27d83166400d11cd8e506d2eb'
   })
 
+  depends_on 'glibc' # R
+  depends_on 'libluv' # R
+  depends_on 'libtermkey' # R
+  depends_on 'libuv' => :build
+  depends_on 'libvterm' # R
+  depends_on 'luajit_bitop' => :build
+  depends_on 'luajit_lpeg' => :build
+  depends_on 'luajit_mpack' => :build
+  depends_on 'luajit' # R
+  depends_on 'msgpack_c' # R
+  # depends_on 'perl_app_cpanminus' # L
+  depends_on 'tree_sitter' # R
+  depends_on 'unibilium' => :build
   depends_on 'xdg_base'
 
-  def self.patch
-    system "sed -i 's,add_compile_options(-fstack-protector-strong),add_compile_options(-fstack-protector-strong)\\n    link_libraries(-fstack-protector-strong),g' CMakeLists.txt"
-    system "sed -i 's,add_compile_options(-fstack-protector --param ssp-buffer-size=4),add_compile_options(-fstack-protector --param ssp-buffer-size=4)\\n    link_libraries(-fstack-protector --param ssp-buffer-size=4),g' CMakeLists.txt"
-  end
-
   def self.build
-    system 'make', 'CMAKE_BUILD_TYPE=RelWithDebInfo'
+    FileUtils.mkdir('builddir')
+    Dir.chdir('builddir') do
+      system "cmake #{CREW_CMAKE_OPTIONS} \
+        ../ -G Ninja"
+    end
+    system 'samu -C builddir'
   end
 
   def self.install
-    system 'make', "DESTDIR=#{CREW_DEST_DIR}", 'install'
+    system "DESTDIR=#{CREW_DEST_DIR} samu -C builddir install"
+  end
+
+  def self.postinstall
+    # Set nvim to be the default vi if there is no vi or if a default
+    # vi does not exist.
+    @crew_vi = File.file?("#{CREW_PREFIX}/bin/vi")
+    @system_vi = File.file?('/usr/bin/vi')
+    @create_vi_symlink = true if !@system_vi && !@crew_vi
+    @create_vi_symlink_ask = true if @crew_vi || @system_vi
+    if @create_vi_symlink_ask
+      print "\nWould you like to set nvim to be the default vi [y/N] "
+      case $stdin.gets.chomp.downcase
+      when 'y', 'yes'
+        @create_vi_symlink = true
+      else
+        @create_vi_symlink = false
+        puts 'Default vi left unchanged.'.lightgreen
+      end
+    end
+    if @create_vi_symlink
+      FileUtils.ln_sf "#{CREW_PREFIX}/bin/nvim", "#{CREW_PREFIX}/bin/vi"
+      puts 'Default vi set to nvim.'.lightgreen
+    end
+
+    @gem_name = name
+    system "gem uninstall -Dx --force --abort-on-dependent #{@gem_name}", exception: false
+    puts 'Installing neovim gem.'.lightblue
+    system "gem install -N #{@gem_name}", exception: false
+    puts 'Installing neovim python module. This may take a while...'.lightblue
+    system 'pip install neovim', exception: false
+    # cpanm install breaks due to failure to install Archive::zip.
+    # puts 'Installing neovim perl module. This may take a while...'.lightblue
+    # system 'cpanm Neovim::Ext'
+  end
+
+  def self.remove
+    @gem_name = name
+    @gems_deps = `gem dependency ^#{@gem_name}\$ | awk '{print \$1}'`.chomp
+    # Delete the first line and convert to an array.
+    @gems = @gems_deps.split("\n").drop(1).append(@gem_name)
+    # bundler never gets uninstalled, though gem dependency lists it for
+    # every package, so delete it from the list.
+    @gems.delete('bundler')
+    @gems.each do |gem|
+      system "gem uninstall -Dx --force --abort-on-dependent #{gem}", exception: false
+    end
+    system 'pip uninstall neovim -y', exception: false
+    # system 'cpanm --uninstall Neovim::Ext'
+    # Remove vi symlink if it is to nvim.
+    return unless File.symlink?("#{CREW_PREFIX}/bin/vi") && (File.readlink("#{CREW_PREFIX}/bin/vi") == "#{CREW_PREFIX}/bin/nvim")
+
+    FileUtils.rm "#{CREW_PREFIX}/bin/vi"
   end
 end

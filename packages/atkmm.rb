@@ -3,40 +3,43 @@ require 'package'
 class Atkmm < Package
   description 'Atkmm is the official C++ interface for the ATK accessibility toolkit library.'
   homepage 'https://www.gtkmm.org/'
-  version '2.28.1'
+  version '2.36.2'
   license 'LGPL-2.1+'
   compatibility 'all'
-  source_url 'https://ftp.gnome.org/pub/gnome/sources/atkmm/2.28/atkmm-2.28.1.tar.xz'
-  source_sha256 '116876604770641a450e39c1f50302884848ce9cc48d43c5dc8e8efc31f31bad'
+  source_url 'https://gitlab.gnome.org/GNOME/atkmm.git'
+  git_hashtag version
 
-  binary_url ({
-     aarch64: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/atkmm/2.28.1_armv7l/atkmm-2.28.1-chromeos-armv7l.tar.xz',
-      armv7l: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/atkmm/2.28.1_armv7l/atkmm-2.28.1-chromeos-armv7l.tar.xz',
-        i686: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/atkmm/2.28.1_i686/atkmm-2.28.1-chromeos-i686.tar.xz',
-      x86_64: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/atkmm/2.28.1_x86_64/atkmm-2.28.1-chromeos-x86_64.tar.xz',
+  binary_url({
+    aarch64: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/atkmm/2.36.2_armv7l/atkmm-2.36.2-chromeos-armv7l.tar.zst',
+     armv7l: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/atkmm/2.36.2_armv7l/atkmm-2.36.2-chromeos-armv7l.tar.zst',
+       i686: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/atkmm/2.36.2_i686/atkmm-2.36.2-chromeos-i686.tar.zst',
+     x86_64: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/atkmm/2.36.2_x86_64/atkmm-2.36.2-chromeos-x86_64.tar.zst'
   })
-  binary_sha256 ({
-     aarch64: '0f959c7e95bee71b46cb1b90902d0e7556d0914e56e1a4e7654c95166307dd8d',
-      armv7l: '0f959c7e95bee71b46cb1b90902d0e7556d0914e56e1a4e7654c95166307dd8d',
-        i686: '1b400ecf33d5dcbceaffee8608a06c155fcd57d118262569136552c1f11c96bc',
-      x86_64: '2aee40b687e3c021894d9d98719655de5bc703f5d397b4ee2f452accc45915cd',
+  binary_sha256({
+    aarch64: '049d1efb8c411ac36328983605a54d54e3bc45587aa3ac9157f4b629be75f720',
+     armv7l: '049d1efb8c411ac36328983605a54d54e3bc45587aa3ac9157f4b629be75f720',
+       i686: '4ceaac05ebc9ae13009b10103249356131e260b7ce8ed3a3e57ad91f73f174e2',
+     x86_64: 'ffe420ab3a9f104326cdb232bf5326767b07e4b5ecbc9af73909e53692b5c685'
   })
 
-  depends_on 'atk'
-  depends_on 'glibmm'
+  depends_on 'at_spi2_core' # R
+  depends_on 'gcc' # R
+  depends_on 'glibc' # R
+  depends_on 'glibmm_2_68' # R
+  depends_on 'glib' # R
+  depends_on 'libsigcplusplus3' # R
+
+  gnome
 
   def self.build
-    system "meson #{CREW_MESON_OPTIONS} \
-    --default-library=both \
+    system "meson setup #{CREW_MESON_OPTIONS} \
     -Dbuild-documentation=false \
-    -Dbuild-demos=false \
-    -Dbuild-tests=false \
     builddir"
-    system "meson configure builddir"
-    system "ninja -C builddir"
+    system 'meson configure builddir'
+    system "#{CREW_NINJA} -C builddir"
   end
 
   def self.install
-    system "DESTDIR=#{CREW_DEST_DIR} ninja -C builddir install"
+    system "DESTDIR=#{CREW_DEST_DIR} #{CREW_NINJA} -C builddir install"
   end
 end

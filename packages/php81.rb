@@ -3,24 +3,23 @@ require 'package'
 class Php81 < Package
   description 'PHP is a popular general-purpose scripting language that is especially suited to web development.'
   homepage 'http://www.php.net/'
-  @_ver = '8.1.3'
-  version @_ver
+  version '8.1.15'
   license 'PHP-3.01'
   compatibility 'all'
-  source_url "https://www.php.net/distributions/php-#{@_ver}.tar.xz"
-  source_sha256 '5d65a11071b47669c17452fb336c290b67c101efb745c1dbe7525b5caf546ec6'
+  source_url 'https://www.php.net/distributions/php-8.1.15.tar.xz'
+  source_sha256 'cd450fb4ee50488c5bf5f08851f514e5a1cac18c9512234d9e16c3a1d35781a6'
 
   binary_url({
-    aarch64: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/php81/8.1.3_armv7l/php81-8.1.3-chromeos-armv7l.tar.zst',
-     armv7l: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/php81/8.1.3_armv7l/php81-8.1.3-chromeos-armv7l.tar.zst',
-       i686: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/php81/8.1.3_i686/php81-8.1.3-chromeos-i686.tar.zst',
-     x86_64: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/php81/8.1.3_x86_64/php81-8.1.3-chromeos-x86_64.tar.zst',
+    aarch64: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/php81/8.1.15_armv7l/php81-8.1.15-chromeos-armv7l.tar.zst',
+     armv7l: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/php81/8.1.15_armv7l/php81-8.1.15-chromeos-armv7l.tar.zst',
+       i686: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/php81/8.1.15_i686/php81-8.1.15-chromeos-i686.tar.zst',
+     x86_64: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/php81/8.1.15_x86_64/php81-8.1.15-chromeos-x86_64.tar.zst'
   })
   binary_sha256({
-    aarch64: '3ba81ec2086ea7c9a0d2bd39f4b7a8f728dd807c04fbbc55ac65506b05f3b312',
-     armv7l: '3ba81ec2086ea7c9a0d2bd39f4b7a8f728dd807c04fbbc55ac65506b05f3b312',
-       i686: '635edf7c9fa54c2cf563b7d5547fc040e05a27b36c34e7e27697c350472bea3c',
-     x86_64: 'f1c147991adf62ef20172454c34777d72f72a92e285946d71c8cd3e92cd16006',
+    aarch64: '6fcccdd3b648d5a7edf7a0829f4283e126a63d0c214b7012d7cf44a233d836d6',
+     armv7l: '6fcccdd3b648d5a7edf7a0829f4283e126a63d0c214b7012d7cf44a233d836d6',
+       i686: '2f7ec19c82b1d914ebc633630551427b35c22831ff956423a8a41171e7d8ac89',
+     x86_64: '32e874f788d11e0d4e901c9ab469f80a8598a1a6c357679f10998382ce57eb82'
   })
 
   depends_on 'aspell_en'
@@ -42,11 +41,11 @@ class Php81 < Package
   depends_on 'oniguruma'
   depends_on 'py3_pygments'
 
+  no_fhs
+
   def self.preflight
     phpver = `php -v 2> /dev/null | head -1 | cut -d' ' -f2`.chomp
-    unless ARGV[0] == 'reinstall' and @_ver == phpver
-      abort "PHP version #{phpver} already installed.".lightgreen unless phpver.empty?
-    end
+    abort "PHP version #{phpver} already installed.".lightgreen if ARGV[0] != 'reinstall' && @_ver != phpver && !phpver.empty?
   end
 
   def self.patch
@@ -71,7 +70,7 @@ class Php81 < Package
   end
 
   def self.build
-    system "CFLAGS='-pipe' ./configure \
+    system "CFLAGS='-pipe' mold -run ./configure \
        --prefix=#{CREW_PREFIX} \
        --docdir=#{CREW_PREFIX}/doc \
        --infodir=#{CREW_PREFIX}/info \
@@ -125,7 +124,7 @@ class Php81 < Package
        --with-zip \
        --with-ffi \
        --with-libedit"
-    system 'make'
+    system 'mold -run make'
   end
 
   def self.check
@@ -133,17 +132,15 @@ class Php81 < Package
   end
 
   def self.install
-    ENV['CREW_FHS_NONCOMPLIANCE_ONLY_ADVISORY'] = '1'
-    reload_constants
     FileUtils.mkdir_p "#{CREW_DEST_PREFIX}/bin"
     FileUtils.mkdir_p "#{CREW_DEST_PREFIX}/tmp/run"
     FileUtils.mkdir_p "#{CREW_DEST_PREFIX}/etc/init.d"
     FileUtils.mkdir_p "#{CREW_DEST_PREFIX}/etc/php-fpm.d"
     system 'make', "INSTALL_ROOT=#{CREW_DEST_DIR}", 'install'
-    FileUtils.install 'php.ini-development', "#{CREW_DEST_PREFIX}/etc/php.ini", mode: 0644
-    FileUtils.install 'sapi/fpm/init.d.php-fpm.in', "#{CREW_DEST_PREFIX}/etc/init.d/php-fpm", mode: 0755
-    FileUtils.install 'sapi/fpm/php-fpm.conf.in', "#{CREW_DEST_PREFIX}/etc/php-fpm.conf", mode: 0755
-    FileUtils.install 'sapi/fpm/www.conf.in', "#{CREW_DEST_PREFIX}/etc/php-fpm.d/www.conf", mode:0644
+    FileUtils.install 'php.ini-development', "#{CREW_DEST_PREFIX}/etc/php.ini", mode: 0o644
+    FileUtils.install 'sapi/fpm/init.d.php-fpm.in', "#{CREW_DEST_PREFIX}/etc/init.d/php-fpm", mode: 0o755
+    FileUtils.install 'sapi/fpm/php-fpm.conf.in', "#{CREW_DEST_PREFIX}/etc/php-fpm.conf", mode: 0o755
+    FileUtils.install 'sapi/fpm/www.conf.in', "#{CREW_DEST_PREFIX}/etc/php-fpm.d/www.conf", mode: 0o644
     FileUtils.ln_s "#{CREW_PREFIX}/etc/init.d/php-fpm", "#{CREW_DEST_PREFIX}/bin/php8-fpm"
 
     # clean up some files created under #{CREW_DEST_DIR}. check http://pear.php.net/bugs/bug.php?id=20383 for more details

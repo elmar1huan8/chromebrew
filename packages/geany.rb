@@ -22,7 +22,7 @@ class Geany < Package
      x86_64: 'dd80c365678847a11d7cd2c2b1dcc9d6d88b50fa573a895d506555113ea973d7'
   })
 
-  depends_on 'atk' # R
+  depends_on 'at_spi2_core' # R
   depends_on 'cairo' # R
   depends_on 'gdk_pixbuf' # R
   depends_on 'glib' # R
@@ -33,7 +33,7 @@ class Geany < Package
   depends_on 'vte'
   depends_on 'xdg_base'
 
-  @xdg_config_home = ENV['XDG_CONFIG_HOME']
+  @xdg_config_home = ENV.fetch('XDG_CONFIG_HOME', nil)
   @xdg_config_home = "#{CREW_PREFIX}/.config" if @xdg_config_home.to_s.empty?
 
   def self.build
@@ -66,8 +66,8 @@ class Geany < Package
       next unless Dir.exist? config_dir
 
       print "\nWould you like to remove #{config_dir}? [y/N] "
-      case $stdin.getc
-      when 'y', 'Y'
+      case $stdin.gets.chomp.downcase
+      when 'y', 'yes'
         FileUtils.rm_rf config_dir
         puts "#{config_dir} removed.".lightred
       else

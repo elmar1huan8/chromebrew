@@ -4,7 +4,7 @@ class Gnome_sudoku < Package
   description 'Sudoku puzzle game for GNOME'
   homepage 'https://wiki.gnome.org/Apps/Sudoku'
   @_ver = '3.38.0'
-  version @_ver + '-1'
+  version "#{@_ver}-1"
   license 'GPL-3+ and CC-BY-SA-3.0'
   compatibility 'all'
   source_url "https://download.gnome.org/sources/gnome-sudoku/#{@_ver.rpartition('.')[0]}/gnome-sudoku-#{@_ver}.tar.xz"
@@ -17,7 +17,7 @@ class Gnome_sudoku < Package
   depends_on 'sommelier'
 
   def self.build
-    system "meson #{CREW_MESON_FNO_LTO_OPTIONS} builddir"
+    system "meson setup #{CREW_MESON_FNO_LTO_OPTIONS} builddir"
     system 'meson configure builddir'
     system 'ninja -C builddir'
   end

@@ -3,7 +3,7 @@ require 'package'
 class Vivaldi < Package
   description 'Vivaldi is a new browser that blocks unwanted ads, protects you from trackers, and puts you in control with unique built-in features.'
   homepage 'https://vivaldi.com/'
-  version '5.3.2679.58-1'
+  version '5.7.2921.63-1'
   compatibility 'aarch64,armv7l,x86_64'
   license 'Vivaldi'
 
@@ -20,10 +20,10 @@ class Vivaldi < Package
   case ARCH
   when 'aarch64', 'armv7l'
     arch = 'armhf'
-    source_sha256 '0c89be36e20212ba0e09d29ff3111806be250e993189b514f3b2962fc309e867'
+    source_sha256 '24ca596aef712accac481fe1334df2e2cb9adec91ae68ddc9679ae599a5185d6'
   when 'x86_64'
     arch = 'amd64'
-    source_sha256 '5c45e446c9885618cd50d556b609effca8441ffb6a7007b62be64e24732db920'
+    source_sha256 'b7d0987f723e22b2a3383f7ab41650191df1c333eb66f9c3d49bcf3204e3cf43'
   end
 
   source_url "https://downloads.vivaldi.com/stable/vivaldi-stable_#{version}_#{arch}.deb"
@@ -32,7 +32,7 @@ class Vivaldi < Package
     # ERROR: ld.so: object '/home/chronos/user/.local/lib/vivaldi/media-codecs-89.0.4389.82/libffmpeg.so' from LD_PRELOAD cannot be preloaded
     system 'sed', '-i', "s:$HOME/.local/lib/vivaldi/:#{CREW_PREFIX}/share/vivaldi/:g", './opt/vivaldi/vivaldi'
     system 'sed', '-i', "s:$HOME/.local/lib/vivaldi/:#{CREW_PREFIX}/share/vivaldi/:g", './opt/vivaldi/update-ffmpeg'
-    system 'sed', '-i', "s:/usr/bin/::g", './usr/share/applications/vivaldi-stable.desktop'
+    system 'sed', '-i', 's:/usr/bin/::g', './usr/share/applications/vivaldi-stable.desktop'
   end
 
   def self.install
@@ -50,7 +50,7 @@ class Vivaldi < Package
     FileUtils.mkdir_p icon_base_path
     Dir["#{CREW_DEST_PREFIX}/share/vivaldi/product_logo_*.png"].each do |filename|
       logo = File.basename(filename)
-      size = File.basename(logo[13,7], '.png')
+      size = File.basename(logo[13, 7], '.png')
       dims = "#{size}x#{size}"
       FileUtils.mkdir_p "#{icon_base_path}/#{dims}/apps"
       FileUtils.mv filename, "#{icon_base_path}/#{dims}/apps/vivaldi.png"

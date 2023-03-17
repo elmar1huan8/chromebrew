@@ -3,7 +3,7 @@ require 'package'
 class Libdrm < Package
   description 'Cross-driver middleware for DRI protocol.'
   homepage 'https://dri.freedesktop.org'
-  @_ver = '2.4.110'
+  @_ver = '2.4.114'
   version @_ver
   license 'MIT'
   compatibility 'all'
@@ -11,36 +11,38 @@ class Libdrm < Package
   git_hashtag "libdrm-#{@_ver}"
 
   binary_url({
-    aarch64: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/libdrm/2.4.110_armv7l/libdrm-2.4.110-chromeos-armv7l.tar.zst',
-     armv7l: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/libdrm/2.4.110_armv7l/libdrm-2.4.110-chromeos-armv7l.tar.zst',
-       i686: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/libdrm/2.4.110_i686/libdrm-2.4.110-chromeos-i686.tar.zst',
-     x86_64: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/libdrm/2.4.110_x86_64/libdrm-2.4.110-chromeos-x86_64.tar.zst'
+    aarch64: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/libdrm/2.4.114_armv7l/libdrm-2.4.114-chromeos-armv7l.tar.zst',
+     armv7l: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/libdrm/2.4.114_armv7l/libdrm-2.4.114-chromeos-armv7l.tar.zst',
+       i686: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/libdrm/2.4.114_i686/libdrm-2.4.114-chromeos-i686.tar.zst',
+     x86_64: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/libdrm/2.4.114_x86_64/libdrm-2.4.114-chromeos-x86_64.tar.zst'
   })
   binary_sha256({
-    aarch64: '17358ed1f87950f483410a3079757d77c7d62f8893571b61e4b93a24e0f50b9a',
-     armv7l: '17358ed1f87950f483410a3079757d77c7d62f8893571b61e4b93a24e0f50b9a',
-       i686: 'b9dff811d3f6a7fc04e2abb259d1e3f1f5486b1609d21e2cd11f5d31435f472e',
-     x86_64: '64ff40876627b172d3d3a92d641e38bffebb4363a52cb1dbc281f09afa0863a1'
+    aarch64: '22204bf614205ee547091bea152cfa7a94f623ba87bf9e2b549b5e4177fd9d8c',
+     armv7l: '22204bf614205ee547091bea152cfa7a94f623ba87bf9e2b549b5e4177fd9d8c',
+       i686: '154326bf8f1d4d42c87550580a8295f490807e463ef74ff9f56d36a64efc358e',
+     x86_64: 'd22e18ca912b0ec5ce698a03eec86f45ded30c55a04265c975468328ef3204ef'
   })
 
+  depends_on 'cairo' # R
   depends_on 'libpciaccess' # R
-  depends_on 'xorg_lib' => :build
   depends_on 'eudev' => :build
   depends_on 'libxslt' => :build
+  depends_on 'glibc' # R
+  depends_on 'gcc' # R
 
   def self.build
-    system "meson #{CREW_MESON_OPTIONS} \
+    system "meson setup #{CREW_MESON_OPTIONS} \
       -Dfreedreno-kgsl=true \
-      -Damdgpu=true \
-      -Dradeon=true \
-      -Dnouveau=true \
-      -Dintel=true \
-      -Dvmwgfx=true \
-      -Dvc4=true \
-      -Dfreedreno=true \
-      -Detnaviv=true \
-      -Dlibkms=true \
-      -Dexynos=true \
+      -Damdgpu=enabled \
+      -Dradeon=enabled \
+      -Dnouveau=enabled \
+      -Dintel=auto \
+      -Dvmwgfx=enabled \
+      -Dvc4=auto \
+      -Dfreedreno=enabled \
+      -Detnaviv=auto \
+      -Dexynos=auto \
+      -Dtests=false \
       -Dudev=true \
       builddir"
     system 'meson configure builddir'

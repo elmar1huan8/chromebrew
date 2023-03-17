@@ -29,11 +29,11 @@ class Gusb < Package
   depends_on 'gobject_introspection'
 
   def self.patch
-    system "sed -i 's/-fstack-protector-strong/-flto/g' meson.build"
+    system "sed -i 's/-fstack-protector-strong/-flto=auto/g' meson.build"
   end
 
   def self.build
-    system "meson #{CREW_MESON_OPTIONS} \
+    system "meson setup #{CREW_MESON_OPTIONS} \
     -Dc_args='-pipe -fno-stack-protector -U_FORTIFY_SOURCE -flto=auto -fuse-ld=gold' \
     -Dc_link_args='-fno-stack-protector -U_FORTIFY_SOURCE -flto=auto -fuse-ld=gold' \
     -Dcpp_args='-pipe -fno-stack-protector -U_FORTIFY_SOURCE -flto=auto -fuse-ld=gold' \

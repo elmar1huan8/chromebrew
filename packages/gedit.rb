@@ -23,7 +23,7 @@ class Gedit < Package
   })
 
   depends_on 'amtk' # R
-  depends_on 'atk' # R
+  depends_on 'at_spi2_core' # R
   depends_on 'cairo' # R
   depends_on 'gdk_pixbuf' # R
   depends_on 'glib' # R
@@ -56,7 +56,7 @@ class Gedit < Package
   end
 
   def self.build
-    system "meson #{CREW_MESON_OPTIONS} \
+    system "meson setup #{CREW_MESON_OPTIONS} \
     -Drequire_all_tests=false \
     -Duser_documentation=false \
     builddir"

@@ -22,10 +22,12 @@ class Bz2 < Package
      x86_64: 'e5dee3da36d88d602496925888f966d47453d4a52e684c4bc6a982906b3b9f32'
   })
 
+  depends_on 'glibc' # R
+
   def self.patch
-    system "sed -i 's,^LDFLAGS=,LDFLAGS=-flto,' Makefile"
-    system "sed -i 's,^CFLAGS=-Wall,CFLAGS=-Wall -flto,' Makefile"
-    system "sed -i 's,^CFLAGS=-fpic,CFLAGS=-fpic -flto,' Makefile-libbz2_so"
+    system "sed -i 's,^LDFLAGS=,LDFLAGS=-flto=auto,' Makefile"
+    system "sed -i 's,^CFLAGS=-Wall,CFLAGS=-Wall -flto=auto,' Makefile"
+    system "sed -i 's,^CFLAGS=-fpic,CFLAGS=-fpic -flto=auto,' Makefile-libbz2_so"
   end
 
   def self.build

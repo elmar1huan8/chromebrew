@@ -3,26 +3,32 @@ require 'package'
 class Libnftnl < Package
   description 'libnftnl is a userspace library providing a low-level netlink programming interface (API) to the in-kernel nf_tables subsystem.'
   homepage 'https://netfilter.org/projects/libnftnl/'
-  compatibility 'all'
   license 'GPL-2'
-  version '1.1.7-1'
-  source_url 'https://netfilter.org/projects/libnftnl/files/libnftnl-1.1.7.tar.bz2'
-  source_sha256 '20dbc13f11004aea2c9e479cfb90359cb11fe3446c3140811c18e4ec1648ed8f'
+  version '1.2.5'
+  compatibility 'all'
+  source_url 'https://netfilter.org/projects/libnftnl/files/libnftnl-1.2.5.tar.xz'
+  source_sha256 '966de0a8120c8a53db859889749368bfb2cba0c4f0b4c1a30d264eccc45f1226'
 
-  binary_url ({
-    aarch64: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/libnftnl/1.1.7-1_armv7l/libnftnl-1.1.7-1-chromeos-armv7l.tar.xz',
-     armv7l: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/libnftnl/1.1.7-1_armv7l/libnftnl-1.1.7-1-chromeos-armv7l.tar.xz',
-       i686: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/libnftnl/1.1.7-1_i686/libnftnl-1.1.7-1-chromeos-i686.tar.xz',
-     x86_64: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/libnftnl/1.1.7-1_x86_64/libnftnl-1.1.7-1-chromeos-x86_64.tar.xz',
+  binary_url({
+    aarch64: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/libnftnl/1.2.5_armv7l/libnftnl-1.2.5-chromeos-armv7l.tar.zst',
+     armv7l: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/libnftnl/1.2.5_armv7l/libnftnl-1.2.5-chromeos-armv7l.tar.zst',
+       i686: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/libnftnl/1.2.5_i686/libnftnl-1.2.5-chromeos-i686.tar.zst',
+     x86_64: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/libnftnl/1.2.5_x86_64/libnftnl-1.2.5-chromeos-x86_64.tar.zst'
   })
-  binary_sha256 ({
-    aarch64: '6cc802f2d8a84367d34fc91c32aa8f06715a0cac91d4c6ea774fe2905be1255a',
-     armv7l: '6cc802f2d8a84367d34fc91c32aa8f06715a0cac91d4c6ea774fe2905be1255a',
-       i686: '510a3ca438c83f53457707bc89e6ddab8332fb7e5343721def87cbc9a86c34da',
-     x86_64: '7e72516f66aab3d3ed6d554e72c0b198ec82ee8e061a7c3941d607890de100f2',
+  binary_sha256({
+    aarch64: '2466837daabd1954e66a0032ee1fe14feac173bb03d5e4b1ba0e1e001169832c',
+     armv7l: '2466837daabd1954e66a0032ee1fe14feac173bb03d5e4b1ba0e1e001169832c',
+       i686: '19843a030252288ea8e7c44e29915d4ac2d01d55858a41120712162e5972e14a',
+     x86_64: '00d251006611eb159fc38fb38c572e7a4aba843042e40b8d8f414b000f18040b'
   })
 
-  depends_on 'libmnl'
+  depends_on 'libmnl' # R
+  depends_on 'glibc' # R
+
+  def self.patch
+    # Fix /usr/bin/file: No such file or directory
+    system 'filefix'
+  end
 
   def self.build
     system "./configure #{CREW_OPTIONS}"

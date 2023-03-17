@@ -1,9 +1,10 @@
 require 'package'
+# build order: harfbuzz => freetype => fontconfig => pango
 
 class Harfbuzz < Package
   description 'HarfBuzz is an OpenType text shaping engine.'
   homepage 'https://www.freedesktop.org/wiki/Software/HarfBuzz/'
-  @_ver = '4.4.1'
+  @_ver = '7.1.0'
   version @_ver
   license 'Old-MIT, ISC and icu'
   compatibility 'all'
@@ -11,46 +12,57 @@ class Harfbuzz < Package
   git_hashtag @_ver
 
   binary_url({
-    aarch64: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/harfbuzz/4.4.1_armv7l/harfbuzz-4.4.1-chromeos-armv7l.tar.zst',
-     armv7l: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/harfbuzz/4.4.1_armv7l/harfbuzz-4.4.1-chromeos-armv7l.tar.zst',
-       i686: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/harfbuzz/4.4.1_i686/harfbuzz-4.4.1-chromeos-i686.tar.zst',
-     x86_64: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/harfbuzz/4.4.1_x86_64/harfbuzz-4.4.1-chromeos-x86_64.tar.zst',
+    aarch64: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/harfbuzz/7.1.0_armv7l/harfbuzz-7.1.0-chromeos-armv7l.tar.zst',
+     armv7l: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/harfbuzz/7.1.0_armv7l/harfbuzz-7.1.0-chromeos-armv7l.tar.zst',
+       i686: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/harfbuzz/7.1.0_i686/harfbuzz-7.1.0-chromeos-i686.tar.zst',
+     x86_64: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/harfbuzz/7.1.0_x86_64/harfbuzz-7.1.0-chromeos-x86_64.tar.zst'
   })
   binary_sha256({
-    aarch64: '556b8124f7d4181f15111dd841cce4fdb9ab39914fa0fbd0516fda5e7d929a94',
-     armv7l: '556b8124f7d4181f15111dd841cce4fdb9ab39914fa0fbd0516fda5e7d929a94',
-       i686: '8acbf2871d86e2b8a91e85f4ab9945b435b5a1e2ac854ebac770544d3f4adbb4',
-     x86_64: '2a03c4db970323bd94a886d3350d6aacde20f415a1f553342400443075c06588',
+    aarch64: '4f7a52a90c3ba072e520ce35d1f3ae98d5673394703ef2af3bc11ecc59be653e',
+     armv7l: '4f7a52a90c3ba072e520ce35d1f3ae98d5673394703ef2af3bc11ecc59be653e',
+       i686: '51ff026b275866174cf2e3b3b86f5351c542ae6bd62763124eba9ea69d8f8471',
+     x86_64: '6403cc02542560d51c9e64ab8ab502774a8324f59f8e936956dc3425565c67b5'
   })
 
-  # provides freetype (sans harfbuzz), ragel, and a non-x11 cairo stub
-  depends_on 'brotli'
-  depends_on 'bz2'
-  depends_on 'chafa'
-  depends_on 'gcc'
-  depends_on 'glib'
+  depends_on 'brotli' # R
+  depends_on 'bz2' # R
+  depends_on 'chafa' # R
+  depends_on 'expat' # R
+  # depends_on 'fontconfig' # This pulls in freetype.
+  # depends_on 'freetype' # R harfbuzz provides this.
+  depends_on 'gcc' # R
+  depends_on 'glibc' # R
+  depends_on 'glib' # R
   depends_on 'gobject_introspection' => :build
-  depends_on 'fontconfig'
-  depends_on 'graphite'
-  depends_on 'icu4c'
-  depends_on 'libffi'
-  depends_on 'libpng'
-  depends_on 'pixman' # Needed for cairo subproject
-  depends_on 'pcre'
-  depends_on 'py3_six' => :build
-  depends_on 'zlibpkg'
+  depends_on 'graphite' # R
+  depends_on 'icu4c' # R
+  depends_on 'libffi' => :build
+  depends_on 'libpng' # R
+  depends_on 'libx11' # R
+  depends_on 'libxcb' # R
+  depends_on 'libxext' # R
+  depends_on 'libxrender' # R
+  depends_on 'lzo' # R
+  depends_on 'pcre' => :build
+  depends_on 'pixman' # R Needed for cairo subproject.
+  depends_on 'zlibpkg' # R
+
+  # provides freetype (sans harfbuzz), ragel, and a non-x11 cairo stub
 
   no_env_options
   conflicts_ok
 
-  def self.patch
-    # Update to new versions of freetype as they come out.
-    system "sed -i 's,revision=VER-2-11-0,revision=VER-2-12-0,g' subprojects/freetype2.wrap"
-    system "sed -i 's,revision=c90faeb7492b1b778d18a796afe5c2e4b32a6356,revision=521a3a7bdb9299d511dcb1e4f243670141e53847,g' subprojects/cairo.wrap"
+  def self.prebuild
+    %w[fontconfig freetype].each do |build_exclusion|
+      next unless File.exist? "#{CREW_PREFIX}/etc/crew/meta/#{build_exclusion}.filelist"
+
+      puts "#{build_exclusion} needs to be uninstalled before this build.".lightred
+    end
   end
 
   def self.build
-    system "meson #{CREW_MESON_OPTIONS} \
+    system 'update-ca-certificates --fresh'
+    system "meson setup #{CREW_MESON_OPTIONS} \
       --wrap-mode=default \
       --default-library=both \
       -Dbenchmark=disabled \
@@ -63,48 +75,104 @@ class Harfbuzz < Package
       -Dtests=disabled \
       builddir"
     system 'meson configure builddir'
-    system 'ninja -C builddir'
+    system "mold -run #{CREW_NINJA} -C builddir"
   end
 
   def self.install
-    system "DESTDIR=#{CREW_DEST_DIR} ninja install -C builddir"
+    system "DESTDIR=#{CREW_DEST_DIR} #{CREW_NINJA} -C builddir install"
     # The following are included the libpng package.
     FileUtils.rm Dir["#{CREW_DEST_LIB_PREFIX}/libpng*"]
     FileUtils.rm Dir["#{CREW_DEST_PREFIX}/include/libpng16/png*"]
     FileUtils.rm Dir["#{CREW_DEST_LIB_PREFIX}/pkgconfig/libpng*"]
+    # Create libtool file. Needed by handbrake build
+    return if File.file?("#{CREW_DEST_LIB_PREFIX}/#{@libname}.la")
+
+    @libname = name.to_s.start_with?('lib') ? name.downcase : "lib#{name.downcase}"
+    @libnames = Dir["#{CREW_DEST_LIB_PREFIX}/#{@libname}.so*"]
+    @libnames = Dir["#{CREW_DEST_LIB_PREFIX}/#{@libname}-*.so*"] if @libnames.empty?
+    @libnames.each do |s|
+      s.gsub!("#{CREW_DEST_LIB_PREFIX}/", '')
+    end
+    @dlname = @libnames.grep(/.so./).first
+    @libname = @dlname.gsub(/.so.\d+/, '')
+    @longest_libname = @libnames.max_by(&:length)
+    @libvars = @longest_libname.rpartition('.so.')[2].split('.')
+
+    @libtool_file = <<~LIBTOOLEOF
+      # #{@libname}.la - a libtool library file
+      # Generated by libtool (GNU libtool) (Created by Chromebrew)
+      #
+      # Please DO NOT delete this file!
+      # It is necessary for linking the library.
+
+      # The name that we can dlopen(3).
+      dlname='#{@dlname}'
+
+      # Names of this library.
+      library_names='#{@libnames.reverse.join(' ')}'
+
+      # The name of the static archive.
+      old_library='#{@libname}.a'
+
+      # Linker flags that cannot go in dependency_libs.
+      inherited_linker_flags=''
+
+      # Libraries that this one depends upon.
+      dependency_libs=''
+
+      # Names of additional weak libraries provided by this library
+      weak_library_names=''
+
+      # Version information for #{name}.
+      current=#{@libvars[0]}
+      age=#{@libvars[1]}
+      revision=#{@libvars[2]}
+
+      # Is this an already installed library?
+      installed=yes
+
+      # Should we warn about portability when linking against -modules?
+      shouldnotlink=no
+
+      # Files to dlopen/dlpreopen
+      dlopen=''
+      dlpreopen=''
+
+      # Directory that this library needs to be installed in:
+      libdir='#{CREW_LIB_PREFIX}'
+    LIBTOOLEOF
+    File.write("#{CREW_DEST_LIB_PREFIX}/#{@libname}.la", @libtool_file)
   end
 
   def self.preinstall
     @device = JSON.parse(File.read("#{CREW_CONFIG_PATH}device.json"), symbolize_names: true)
-    if @device[:installed_packages].any? { |elem| elem[:name] == 'freetype' }
-      system "sed -i '/freetype2/d;/libfreetype/d' filelist"
-      system "sed -i '/freetype2/d;/libfreetype/d' dlist"
-    end
+    return unless @device[:installed_packages].any? { |elem| elem[:name] == 'freetype' }
+
+    system "sed -i '/freetype2/d;/libfreetype/d' filelist"
+    system "sed -i '/freetype2/d;/libfreetype/d' dlist"
   end
 
   def self.postinstall
     # This should become a function.
     # check for conflicts with other installed files
     @override_allowed = %w[fontconfig cairo]
-    puts "Checking for conflicts with files from installed packages..."
+    puts 'Checking for conflicts with files from installed packages...'
     conflicts = []
-    conflictscmd = %x[grep --exclude #{CREW_META_PATH}#{self.name}.filelist -Fxf #{CREW_META_PATH}#{self.name}.filelist #{CREW_META_PATH}*.filelist]
+    conflictscmd = `grep --exclude #{CREW_META_PATH}#{name}.filelist -Fxf #{CREW_META_PATH}#{name}.filelist #{CREW_META_PATH}*.filelist`
     conflicts << conflictscmd.gsub(/(\.filelist|#{CREW_META_PATH})/, '').split("\n")
     conflicts.reject!(&:empty?)
-    unless conflicts.empty?
-      if self.conflicts_ok?
-        puts "Warning: There is a conflict with the same file in another package.".orange
-      else
-        puts "Error: There is a conflict with the same file in another package.".lightred
-        @_errors = 1
-      end
-      conflicts.each do |conflict|
-        conflict.each do |thisconflict|
-          singleconflict = thisconflict.split(':',-1)
-          if @override_allowed.include?(singleconflict[0])
-            system "sed -i '\\\?^#{singleconflict[1]}?d'  #{CREW_META_PATH}/#{singleconflict[0]}.filelist"
-          end
-        end
+    return if conflicts.empty?
+
+    if conflicts_ok?
+      puts 'Warning: There is a conflict with the same file in another package.'.orange
+    else
+      puts 'Error: There is a conflict with the same file in another package.'.lightred
+      @_errors = 1
+    end
+    conflicts.each do |conflict|
+      conflict.each do |thisconflict|
+        singleconflict = thisconflict.split(':', -1)
+        system "sed -i '\\?^#{singleconflict[1]}?d'  #{CREW_META_PATH}/#{singleconflict[0]}.filelist" if @override_allowed.include?(singleconflict[0])
       end
     end
   end

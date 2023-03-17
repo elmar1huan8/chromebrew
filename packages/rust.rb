@@ -3,38 +3,44 @@ require 'package'
 class Rust < Package
   description 'Rust is a systems programming language that runs blazingly fast, prevents segfaults, and guarantees thread safety.'
   homepage 'https://www.rust-lang.org/'
-  @_ver = '1.62.0'
+  @_ver = '1.67.0'
   version @_ver
   license 'Apache-2.0 and MIT'
   compatibility 'all'
-  source_url 'SKIP'
+  source_url 'https://github.com/rust-lang/rustup.git'
+  git_hashtag '1.25.1'
 
   binary_url({
-    aarch64: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/rust/1.62.0_armv7l/rust-1.62.0-chromeos-armv7l.tar.zst',
-     armv7l: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/rust/1.62.0_armv7l/rust-1.62.0-chromeos-armv7l.tar.zst',
-       i686: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/rust/1.62.0_i686/rust-1.62.0-chromeos-i686.tar.zst',
-     x86_64: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/rust/1.62.0_x86_64/rust-1.62.0-chromeos-x86_64.tar.zst'
+    aarch64: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/rust/1.67.0_armv7l/rust-1.67.0-chromeos-armv7l.tar.zst',
+     armv7l: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/rust/1.67.0_armv7l/rust-1.67.0-chromeos-armv7l.tar.zst',
+       i686: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/rust/1.67.0_i686/rust-1.67.0-chromeos-i686.tar.zst',
+     x86_64: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/rust/1.67.0_x86_64/rust-1.67.0-chromeos-x86_64.tar.zst'
   })
   binary_sha256({
-    aarch64: '21d46c4f893c5cefced0270d0b367968dbb448b8c31c6d8cf832b2b3a72f303d',
-     armv7l: '21d46c4f893c5cefced0270d0b367968dbb448b8c31c6d8cf832b2b3a72f303d',
-       i686: 'e04a05d20eb6746e254da39b740b8bb0e7866ca5a216f8294765f021fada108f',
-     x86_64: 'f46971a19f5d0e5640d328f1f664eb0d93dc6ba23fa0c0b4358fdbff6205dc8a'
+    aarch64: 'b9a8b8593525aa4bd1b1b445939f0dc813300983908f7d68f99ec2b79c4a14b0',
+     armv7l: 'b9a8b8593525aa4bd1b1b445939f0dc813300983908f7d68f99ec2b79c4a14b0',
+       i686: '603ac1942d168195d08b00a7314c6d01a679f575a36cbd16f652d78ca1137274',
+     x86_64: 'e90ca30d2323ae2f8620c36090444d3f42c5eda657d6ee0ca0930c548db8af1f'
   })
+
+  depends_on 'gcc' # R
+  depends_on 'glibc' # R
+  depends_on 'zlibpkg' # R
 
   def self.install
     ENV['RUST_BACKTRACE'] = 'full'
     ENV['CARGO_HOME'] = "#{CREW_DEST_PREFIX}/share/cargo"
     ENV['RUSTUP_HOME'] = "#{CREW_DEST_PREFIX}/share/rustup"
     default_host = ARCH == 'aarch64' || ARCH == 'armv7l' ? 'armv7-unknown-linux-gnueabihf' : "#{ARCH}-unknown-linux-gnu"
-    downloader 'https://sh.rustup.rs', 'a3cb081f88a6789d104518b30d4aa410009cd08c3822a1226991d6cf0442a0f8', 'rustup.sh'
-    system "sed -i 's,\$(mktemp -d 2>/dev/null || ensure mktemp -d -t rustup),#{CREW_PREFIX}/tmp,' rustup.sh"
+    system "sed -i 's,$(mktemp -d 2>/dev/null || ensure mktemp -d -t rustup),#{CREW_PREFIX}/tmp,' rustup-init.sh"
     FileUtils.mkdir_p(CREW_DEST_HOME)
     FileUtils.mkdir_p("#{CREW_DEST_PREFIX}/bin")
     FileUtils.mkdir_p("#{CREW_DEST_PREFIX}/share/cargo")
     FileUtils.mkdir_p("#{CREW_DEST_PREFIX}/share/rustup")
-    system "RUSTFLAGS='-Clto=thin' bash ./rustup.sh -y --no-modify-path --default-host #{default_host} --default-toolchain #{@_ver} --profile minimal"
-    system "install -Dm644 #{CREW_DEST_PREFIX}/share/rustup/toolchains/#{@_ver}-#{default_host}/etc/bash_completion.d/cargo #{CREW_DEST_PREFIX}/share/bash-completion/completions/cargo"
+    system "RUSTFLAGS='-Clto=thin' bash ./rustup-init.sh -y --no-modify-path --default-host #{default_host} --default-toolchain #{@_ver} --profile minimal"
+    FileUtils.mkdir_p("#{CREW_DEST_PREFIX}/share/bash-completion/completions/")
+    FileUtils.install "#{CREW_DEST_PREFIX}/share/rustup/toolchains/#{@_ver}-#{default_host}/etc/bash_completion.d/cargo",
+                      "#{CREW_DEST_PREFIX}/share/bash-completion/completions/cargo", mode: 0o644
     FileUtils.rm("#{CREW_DEST_PREFIX}/share/rustup/toolchains/#{@_ver}-#{default_host}/etc/bash_completion.d/cargo")
     FileUtils.touch "#{CREW_DEST_PREFIX}/share/bash-completion/completions/rustup"
     FileUtils.mv("#{CREW_DEST_PREFIX}/share/rustup/toolchains/#{@_ver}-#{default_host}/share/man/",
@@ -75,8 +81,8 @@ class Rust < Package
     config_dirs = %W[#{HOME}/.rustup #{CREW_PREFIX}/share/rustup #{HOME}/.cargo #{CREW_PREFIX}/share/cargo]
     print config_dirs.to_s
     print "\nWould you like to remove the config directories above? [y/N] "
-    case $stdin.getc
-    when 'y', 'Y'
+    case $stdin.gets.chomp.downcase
+    when 'y', 'yes'
       FileUtils.rm_rf config_dirs
       puts "#{config_dirs} removed.".lightgreen
     else

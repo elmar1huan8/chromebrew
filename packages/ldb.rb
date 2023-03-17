@@ -6,34 +6,38 @@ require 'package'
 class Ldb < Package
   description 'Schema-less, ldap like, API and database'
   homepage 'https://ldb.samba.org/'
-  version '2.5.0'
+  @_ver = '2.7.1'
+  version "#{@_ver}-py3.11"
   license 'GPLv3'
   compatibility 'all'
-  source_url "https://samba.org/ftp/ldb/ldb-#{version}.tar.gz"
-  source_sha256 '583ec548fc9cac4596dcd8b510408cdda2a8f85c02e672d0f9dce6a7364faa5e'
+  source_url "https://samba.org/ftp/ldb/ldb-#{@_ver}.tar.gz"
+  source_sha256 'c4632c9a7f81f8a45ed46fc14d18eb507edf4e79f6e88d16977478ef95ed5b7f'
 
   binary_url({
-    aarch64: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/ldb/2.5.0_armv7l/ldb-2.5.0-chromeos-armv7l.tar.zst',
-     armv7l: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/ldb/2.5.0_armv7l/ldb-2.5.0-chromeos-armv7l.tar.zst',
-       i686: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/ldb/2.5.0_i686/ldb-2.5.0-chromeos-i686.tar.zst',
-     x86_64: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/ldb/2.5.0_x86_64/ldb-2.5.0-chromeos-x86_64.tar.zst'
+    aarch64: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/ldb/2.7.1-py3.11_armv7l/ldb-2.7.1-py3.11-chromeos-armv7l.tar.zst',
+     armv7l: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/ldb/2.7.1-py3.11_armv7l/ldb-2.7.1-py3.11-chromeos-armv7l.tar.zst',
+       i686: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/ldb/2.7.1-py3.11_i686/ldb-2.7.1-py3.11-chromeos-i686.tar.zst',
+     x86_64: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/ldb/2.7.1-py3.11_x86_64/ldb-2.7.1-py3.11-chromeos-x86_64.tar.zst'
   })
   binary_sha256({
-    aarch64: 'c07b01c496e6ec532e654ca9d7f22aeca3d8ef79645ada44fd6457b4a64f4bb7',
-     armv7l: 'c07b01c496e6ec532e654ca9d7f22aeca3d8ef79645ada44fd6457b4a64f4bb7',
-       i686: 'd0de89fd2485e5963f9ee7f0626c2057fc8b52685003963ab75ce43f4c06d08b',
-     x86_64: '5e714041f50e093916d5ec22760b40342dee7340ddd75cf3f0952dcc3e6e03ad'
+    aarch64: '40e359e72bf1046b11041574031a84d9d62395ccad88cd1e8c822278d5b8db20',
+     armv7l: '40e359e72bf1046b11041574031a84d9d62395ccad88cd1e8c822278d5b8db20',
+       i686: 'a10ee878eb6dbbab2d3c253167d62b444dcd0e69019b0e09f6a17b400f7348d0',
+     x86_64: 'f3709bc212eb23f835b530c7d277ac843d4717eea057108d7d28cade88e30a1c'
   })
 
   depends_on 'cmocka' => :build
   depends_on 'docbook_xsl' => :build
-  depends_on 'libbsd'
-  depends_on 'libxcrypt'
-  depends_on 'lmdb'
-  depends_on 'popt'
-  depends_on 'talloc'
-  depends_on 'tdb'
-  depends_on 'tevent'
+  depends_on 'glibc' # R
+  depends_on 'libbsd' # R
+  depends_on 'libxcrypt' => :build
+  depends_on 'lmdb' # R
+  depends_on 'openldap' # R
+  depends_on 'popt' # R
+  depends_on 'python3' # R
+  depends_on 'talloc' # R
+  depends_on 'tdb' # R
+  depends_on 'tevent' # R
 
   def self.build
     system "./configure \

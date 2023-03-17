@@ -24,9 +24,7 @@ class Beav < Package
 
   def self.patch
     system 'curl -#L https://httpredir.debian.org/debian/pool/main/b/beav/beav_1.40-18.diff.gz | gunzip >> beav_1.40-18.diff'
-    unless Digest::SHA256.hexdigest(File.read('beav_1.40-18.diff')) == '5139aa0bdc9424b7ad8197070e1902d8225ee78e2091d02a493422cd91fe5973'
-      abort 'Checksum mismatch. :/ Try again.'.lightred
-    end
+    abort 'Checksum mismatch. :/ Try again.'.lightred unless Digest::SHA256.hexdigest(File.read('beav_1.40-18.diff')) == '5139aa0bdc9424b7ad8197070e1902d8225ee78e2091d02a493422cd91fe5973'
     system 'patch -Np1 -i beav_1.40-18.diff'
     system "sed -i 's:-lncurses:-ltinfow:g' Makefile"
     system "sed -i '12d' basic.c"
@@ -34,7 +32,7 @@ class Beav < Package
     system "sed -i '76d' random.c"
     system "sed -i '11d' symbol.c"
     system "sed -i 's:#include <term.h>:#include <ncursesw/term.h>:' tcap.c"
-    system "sed -i 's,-g -DUNIX -Wall,-g -DUNIX -Wall -flto,g' Makefile"
+    system "sed -i 's,-g -DUNIX -Wall,-g -DUNIX -Wall -flto=auto,g' Makefile"
   end
 
   def self.build

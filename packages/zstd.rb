@@ -3,7 +3,7 @@ require 'package'
 class Zstd < Package
   description 'Zstandard - Fast real-time compression algorithm'
   homepage 'http://www.zstd.net'
-  @_ver = '1.5.2'
+  @_ver = '1.5.4'
   version @_ver
   license 'BSD or GPL-2'
   compatibility 'all'
@@ -11,33 +11,33 @@ class Zstd < Package
   git_hashtag "v#{@_ver}"
 
   binary_url({
-    aarch64: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/zstd/1.5.2_armv7l/zstd-1.5.2-chromeos-armv7l.tar.zst',
-     armv7l: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/zstd/1.5.2_armv7l/zstd-1.5.2-chromeos-armv7l.tar.zst',
-       i686: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/zstd/1.5.2_i686/zstd-1.5.2-chromeos-i686.tar.zst',
-     x86_64: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/zstd/1.5.2_x86_64/zstd-1.5.2-chromeos-x86_64.tar.zst'
+    aarch64: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/zstd/1.5.4_armv7l/zstd-1.5.4-chromeos-armv7l.tar.xz',
+     armv7l: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/zstd/1.5.4_armv7l/zstd-1.5.4-chromeos-armv7l.tar.xz',
+       i686: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/zstd/1.5.4_i686/zstd-1.5.4-chromeos-i686.tar.xz',
+     x86_64: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/zstd/1.5.4_x86_64/zstd-1.5.4-chromeos-x86_64.tar.xz'
   })
   binary_sha256({
-    aarch64: 'dcf0cc629f47f5e7ce23ef73948a859bdc8383b542ed6f6eb7689ced2541280a',
-     armv7l: 'dcf0cc629f47f5e7ce23ef73948a859bdc8383b542ed6f6eb7689ced2541280a',
-       i686: 'f2f95e2d6855b4591c8defe17f2e738d2cb6140af0245f005aa7889addba055f',
-     x86_64: '6829742f7ba7362ad22539c914ec114acfd52d78f755f5c057902e2924dbef1f'
+    aarch64: '85cdfe9c3242874f74cdbc31ed8d07a33d1d9e0fc593317e88d36e2b1f1524e1',
+     armv7l: '85cdfe9c3242874f74cdbc31ed8d07a33d1d9e0fc593317e88d36e2b1f1524e1',
+       i686: '077b2e269304567c0a413bc636b789130d3f549ec9272b4040b89ee81231482a',
+     x86_64: 'd3aab25ec7be12f784474f288ebc6818051f8beb5cddf8580e1d5a35ca0b7e4f'
   })
 
-  depends_on 'musl_zstd'
+  depends_on 'glibc' # R
+  depends_on 'gcc' # R
+
   no_patchelf
+  no_zstd
 
   def self.build
     Dir.chdir 'build/cmake' do
-      FileUtils.mkdir('builddir')
-      Dir.chdir('builddir') do
-        system "cmake #{CREW_CMAKE_OPTIONS} \
-        -DZSTD_BUILD_STATIC=ON \
-        -DZSTD_BUILD_SHARED=ON \
-        -DZSTD_LEGACY_SUPPORT=ON \
-        -DZSTD_BUILD_CONTRIB=ON \
-        -DZSTD_PROGRAMS_LINK_SHARED=OFF \
-        ../ -G Ninja"
-      end
+      system "cmake -B builddir #{CREW_CMAKE_OPTIONS} \
+      -DZSTD_BUILD_STATIC=ON \
+      -DZSTD_BUILD_SHARED=ON \
+      -DZSTD_LEGACY_SUPPORT=ON \
+      -DZSTD_BUILD_CONTRIB=ON \
+      -DZSTD_PROGRAMS_LINK_SHARED=OFF \
+      -G Ninja"
       system 'samu -C builddir'
     end
   end
@@ -48,7 +48,9 @@ class Zstd < Package
     end
     # Convert symlinks to hard links in libdir.
     Dir.chdir CREW_DEST_LIB_PREFIX do
-      system "find -type l -exec bash -c 'ln -f \"\$(readlink -m \"\$0\")\" \"\$0\"' {} \\\;"
+      Dir['*'].each do |f|
+        FileUtils.ln File.realpath(f), f, force: true if File.symlink?(f)
+      end
     end
   end
 end

@@ -3,34 +3,42 @@ require 'package'
 class Texinfo < Package
   description 'Texinfo is the official documentation format of the GNU project.'
   homepage 'https://www.gnu.org/software/texinfo/'
-  version '6.8'
+  version '7.0'
   license 'GPL-3'
   compatibility 'all'
-  source_url 'https://ftpmirror.gnu.org/texinfo/texinfo-6.8.tar.xz'
-  source_sha256 '8eb753ed28bca21f8f56c1a180362aed789229bd62fff58bf8368e9beb59fec4'
+  source_url 'https://ftpmirror.gnu.org/texinfo/texinfo-7.0.tar.xz'
+  source_sha256 '20744b82531ce7a04d8cee34b07143ad59777612c3695d5855f29fba40fbe3e0'
 
   binary_url({
-    aarch64: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/texinfo/6.8_armv7l/texinfo-6.8-chromeos-armv7l.tpxz',
-     armv7l: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/texinfo/6.8_armv7l/texinfo-6.8-chromeos-armv7l.tpxz',
-       i686: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/texinfo/6.8_i686/texinfo-6.8-chromeos-i686.tpxz',
-     x86_64: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/texinfo/6.8_x86_64/texinfo-6.8-chromeos-x86_64.tpxz'
+    aarch64: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/texinfo/7.0_armv7l/texinfo-7.0-chromeos-armv7l.tar.zst',
+     armv7l: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/texinfo/7.0_armv7l/texinfo-7.0-chromeos-armv7l.tar.zst',
+       i686: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/texinfo/7.0_i686/texinfo-7.0-chromeos-i686.tar.zst',
+     x86_64: 'https://gitlab.com/api/v4/projects/26210301/packages/generic/texinfo/7.0_x86_64/texinfo-7.0-chromeos-x86_64.tar.zst'
   })
   binary_sha256({
-    aarch64: '8ab8c07b8df6060de246818fe5c94d8fb52c1c16789eddc1ecdcf47d77a53e71',
-     armv7l: '8ab8c07b8df6060de246818fe5c94d8fb52c1c16789eddc1ecdcf47d77a53e71',
-       i686: 'd0a9f83f9314f21775cdddf404dfd63117ad55a22bfc2c2134c22e045ed7e1ac',
-     x86_64: '9b3df80fbebafc830f9ad99c73ab8aaaa3ad0d0ca13cf33a6a4ed9fb737e8ed3'
+    aarch64: 'b2a728d4411d0f6413b4799db055b2a86d34de21b4a3fab0b63816a75e5a1c0f',
+     armv7l: 'b2a728d4411d0f6413b4799db055b2a86d34de21b4a3fab0b63816a75e5a1c0f',
+       i686: '5d2bc0b29e4066dfb002a618089cefe8c438635e45e9cce523fd3da6691c18a8',
+     x86_64: '2c5c0166ad926b0fbafed07ae06b44635bba753fdc569108d6f07dbfb314a7ed'
   })
 
+  depends_on 'glibc' # R
+  depends_on 'perl'
   depends_on 'perl_locale_messages'
   depends_on 'perl_text_unidecode'
   depends_on 'perl_unicode_eastasianwidth'
+  depends_on 'ncurses' # R
 
   def self.build
     # configure and make
-    system "#{CREW_ENV_OPTIONS} ./configure #{CREW_OPTIONS} \
+    # LDflags set to workaround i686 build issues.
+    @ldflags = ''
+    @ldflags = 'LDFLAGS=-static' if ARCH == 'i686'
+    system "#{@ldflags} ./configure #{CREW_OPTIONS} \
       --with-external-Text-Unidecode \
       --with-external-Unicode-EastAsianWidth"
+    # Fix broken i686 build.
+    system "sed -i 's/-static//' info/Makefile" if ARCH == 'i686'
     system 'make'
   end
 

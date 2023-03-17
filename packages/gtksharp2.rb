@@ -25,7 +25,7 @@ class Gtksharp2 < Package
   depends_on 'mono'
   depends_on 'libglade'
   depends_on 'pango'
-  depends_on 'atk'
+  depends_on 'at_spi2_core'
   depends_on 'gtk2'
   depends_on 'glib'
 
@@ -45,7 +45,7 @@ class Gtksharp2 < Package
       #{' '}
               public class TestRange
     PATCH_EOF
-    IO.write('ambiguousrange.patch', @ambiguousrange)
+    File.write('ambiguousrange.patch', @ambiguousrange)
     system 'patch -p 1 -i ambiguousrange.patch'
     system 'filefix'
   end

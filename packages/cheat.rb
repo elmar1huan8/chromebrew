@@ -31,10 +31,10 @@ class Cheat < Package
   def self.remove
     config_dir = "#{HOME}/.config/cheat"
     if Dir.exist? config_dir
-      puts "WARNING: This will remove all cheat config!".orange
+      puts 'WARNING: This will remove all cheat config!'.orange
       print "Would you like to remove the #{config_dir} directory? [y/N] "
-      case STDIN.getc
-      when 'y', 'Y'
+      case $stdin.gets.chomp.downcase
+      when 'y', 'yes'
         FileUtils.rm_rf config_dir
         puts "#{config_dir} removed.".lightgreen
       else

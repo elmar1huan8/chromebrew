@@ -3,22 +3,23 @@ require 'package'
 class Firefox < Package
   description 'Mozilla Firefox (or simply Firefox) is a free and open-source web browser'
   homepage 'https://www.mozilla.org/en-US/firefox/'
-  version '102.0'
+  version '111.0'
   license 'MPL-2.0, GPL-2 and LGPL-2.1'
   compatibility 'i686,x86_64'
 
-  source_url ({
-      i686: "https://download-installer.cdn.mozilla.net/pub/firefox/releases/#{version}/linux-i686/en-US/firefox-#{version}.tar.bz2",
-    x86_64: "https://download-installer.cdn.mozilla.net/pub/firefox/releases/#{version}/linux-x86_64/en-US/firefox-#{version}.tar.bz2"
+  source_url({
+    x86_64: "https://download-installer.cdn.mozilla.net/pub/firefox/releases/#{version}/linux-x86_64/en-US/firefox-#{version}.tar.bz2",
+      i686: "https://download-installer.cdn.mozilla.net/pub/firefox/releases/#{version}/linux-i686/en-US/firefox-#{version}.tar.bz2"
   })
-  source_sha256 ({
-      i686: '1706ffd45a29e72d7fc934d12d45f0432ac4a9c33c43f51dda5aa5508956fecd',
-    x86_64: '2673d387d22ae6e21c20f091dc4811197aaa516110d44133e4d14c91d5568f87'
+  source_sha256({
+    x86_64: '49599b5b0b24400b564af91f4578314c0e069347aea76602e7eca9d8055b6fc0',
+      i686: 'ff03b4429f4d1000a8caf9d7958600d03322874ccfe1b51ccf44fd53c7ecad18'
   })
 
   no_compile_needed
+  no_shrink
 
-  depends_on 'atk'
+  depends_on 'at_spi2_core'
   depends_on 'cairo'
   depends_on 'dbus'
   depends_on 'dbus_glib'
@@ -79,8 +80,8 @@ class Firefox < Package
     FileUtils.mkdir_p "#{icon_base_path}/128x128/apps"
     FileUtils.mkdir_p "#{icon_base_path}/256x256/apps"
     FileUtils.cp_r '.', "#{CREW_DEST_PREFIX}/firefox"
-    IO.write("#{CREW_DEST_PREFIX}/bin/firefox", @firefox_sh, perm: 0o755)
-    IO.write("#{CREW_DEST_PREFIX}/share/applications/firefox.desktop", @firefox_desktop, perm: 0o644)
+    File.write("#{CREW_DEST_PREFIX}/bin/firefox", @firefox_sh, perm: 0o755)
+    File.write("#{CREW_DEST_PREFIX}/share/applications/firefox.desktop", @firefox_desktop, perm: 0o644)
     Dir.chdir 'browser/chrome/icons/default' do
       FileUtils.mv 'default16.png', "#{icon_base_path}/16x16/apps/firefox.png"
       FileUtils.mv 'default32.png', "#{icon_base_path}/32x32/apps/firefox.png"
@@ -96,8 +97,8 @@ class Firefox < Package
 
   def self.postinstall
     print "\nSet Firefox as your default browser? [Y/n]: "
-    case STDIN.getc
-    when "\n", "Y", "y"
+    case $stdin.gets.chomp.downcase
+    when '', 'y', 'yes'
       Dir.chdir("#{CREW_PREFIX}/bin") do
         FileUtils.ln_sf 'firefox', 'x-www-browser'
       end

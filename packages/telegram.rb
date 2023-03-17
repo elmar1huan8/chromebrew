@@ -3,18 +3,22 @@ require 'package'
 class Telegram < Package
   description "Telegram is a messaging app with a focus on speed and security, it's super-fast, simple and free."
   homepage 'https://telegram.org/'
-  version '3.7.3'
+  version '4.6.5'
   license 'BSD, LGPL-2+ and GPL-3-with-openssl-exception'
   compatibility 'x86_64'
-  source_url 'https://github.com/telegramdesktop/tdesktop/releases/download/v3.7.3/tsetup.3.7.3.tar.xz'
-  source_sha256 '3d1b44902f2e3d3b8393bb9c35cc21100934f342438014ea3d201afd692ff4e8'
+  source_url 'https://github.com/telegramdesktop/tdesktop/releases/download/v4.6.5/tsetup.4.6.5.tar.xz'
+  source_sha256 'a604e0aa6c3fe4aba96e18425cdc88dce88377a6e831b0b454a2ca27e53368d7'
+
+  depends_on 'mesa'
+
+  no_compile_needed
 
   def self.build
     telegram = <<~EOF
-    #!/bin/bash
-    QT_QPA_PLATFORM=wayland-egl DISPLAY= WAYLAND_DISPLAY=wayland-0 Telegram "$@"
+      #!/bin/bash
+      QT_QPA_PLATFORM=wayland-egl DISPLAY= WAYLAND_DISPLAY=wayland-0 Telegram "$@"
     EOF
-    IO.write('telegram', telegram)
+    File.write('telegram', telegram)
   end
 
   def self.install
